@@ -4464,7 +4464,7 @@ async function loadDeliveryRates(){
 }
 window.loadDeliveryRates=loadDeliveryRates;
 
-function addDeliveryRateRow()function addDeliveryRateRow(){const box=document.getElementById('deliveryRatesAdmin');if(!box)return;const d=document.createElement('div');d.className='delivery-rate-row';d.style.cssText='display:grid;grid-template-columns:1fr 95px 30px;gap:6px;align-items:center;margin-top:8px;';d.innerHTML=`<input class="delivery-town" placeholder="Town / City"><input class="delivery-fee" type="number" min="0" step="1" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-rate-row').remove()">×</button>`;box.appendChild(d);}
+function addDeliveryRateRow(){const box=document.getElementById('deliveryRatesAdmin');if(!box)return;const d=document.createElement('div');d.className='delivery-rate-row';d.style.cssText='display:grid;grid-template-columns:1fr 95px 30px;gap:6px;align-items:center;margin-top:8px;';d.innerHTML=`<input class="delivery-town" placeholder="Town / City"><input class="delivery-fee" type="number" min="0" step="1" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-rate-row').remove()">×</button>`;box.appendChild(d);}
 async function saveDeliveryRates(){
  const rows=[...document.querySelectorAll('#deliveryRatesAdmin .delivery-rate-row')].map(r=>({town:r.querySelector('.delivery-town')?.value.trim(),fee:Number(r.querySelector('.delivery-fee')?.value),active:true})).filter(r=>r.town&&Number.isFinite(r.fee)&&r.fee>=0);
  if(!rows.length){showToast('Add at least one town and delivery fee.','warning');return;}
