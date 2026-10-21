@@ -977,9 +977,9 @@ a{color:#0f766e}
     <div class="auth-screen" id="loginScreen" style="display:flex;">
       <div class="auth-card">
         <div class="auth-brand"><div class="auth-logo"><i class="fas fa-crown"></i></div><h1>Pharma Pharmacy</h1><p id="authSub">Professional POS & Business Management</p></div>
-        <div class="login-tabs"><button class="login-tab active" id="emailTab" type="button" onclick="showLoginPane('emailPane')">Email Login</button><button class="login-tab" id="pinTab" type="button" onclick="showLoginPane('pinPane')">PIN Login</button></div>
+        <div class="login-tabs"><button class="login-tab active" id="emailTab" type="button" onclick="showLoginPane('emailPane')">Email Login</button><button class="login-tab hidden" id="pinTab" type="button" aria-hidden="true" tabindex="-1" onclick="showLoginPane('emailPane')">PIN Login unavailable</button></div>
         <div id="loginAlert" class="login-alert"></div>
-        <div id="pinPane" class="hidden"><div class="form-group"><label>Staff Email / Username</label><input id="pinEmail" type="text" placeholder="admin or staff email"></div><div class="pin-dots" id="pinDots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div><input id="pinInput" type="password" inputmode="numeric" maxlength="6" class="hidden"><div class="pin-keypad"><button type="button" onclick="pinKey('1')">1</button><button type="button" onclick="pinKey('2')">2</button><button type="button" onclick="pinKey('3')">3</button><button type="button" onclick="pinKey('4')">4</button><button type="button" onclick="pinKey('5')">5</button><button type="button" onclick="pinKey('6')">6</button><button type="button" onclick="pinKey('7')">7</button><button type="button" onclick="pinKey('8')">8</button><button type="button" onclick="pinKey('9')">9</button><button type="button" onclick="pinClear()">⌫</button><button type="button" onclick="pinKey('0')">0</button><button type="button" id="pinEnter" onclick="handleLogin(event)">✓</button></div></div>
+        <div id="pinPane" class="hidden"><div class="form-group"><label>Staff Email / Username</label><input id="pinEmail" type="text" placeholder="admin or staff email"></div><div class="pin-dots" id="pinDots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div><input id="pinInput" type="password" inputmode="numeric" maxlength="6" class="hidden"><div class="pin-keypad"><button type="button" onclick="pinKey('1')">1</button><button type="button" onclick="pinKey('2')">2</button><button type="button" onclick="pinKey('3')">3</button><button type="button" onclick="pinKey('4')">4</button><button type="button" onclick="pinKey('5')">5</button><button type="button" onclick="pinKey('6')">6</button><button type="button" onclick="pinKey('7')">7</button><button type="button" onclick="pinKey('8')">8</button><button type="button" onclick="pinKey('9')">9</button><button type="button" onclick="pinClear()">⌫</button><button type="button" onclick="pinKey('0')">0</button><button type="button" id="pinEnter" onclick="showLoginPane('emailPane')">✓</button></div></div>
         <div id="emailPane"><form id="loginForm" onsubmit="handleLogin(event)"><div class="form-group"><label>Email</label><input id="emailInput" type="email" required placeholder="name@company.com"></div><div class="form-group"><label>Password</label><input id="passwordInput" type="password" required placeholder="Password"></div><button class="btn btn-primary btn-block" id="loginBtn" type="submit"><span id="btnText">Sign In</span><i id="btnSpinner" class="fas fa-spinner fa-spin hidden"></i></button></form><button type="button" id="forgotPasswordBtn" class="btn btn-link btn-block" style="margin-top:10px;color:#0F766E" onclick="sendPasswordReset()">Forgot password? Send reset email</button></div>
         <div id="passwordRecoveryPanel" class="hidden" style="margin-top:16px"><h3 style="margin-bottom:12px">Set a new password</h3><form onsubmit="updateRecoveredPassword(event)"><div class="form-group"><label>New password</label><input id="recoveryPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="At least 8 characters"></div><div class="form-group"><label>Confirm new password</label><input id="recoveryPasswordConfirm" type="password" minlength="8" autocomplete="new-password" required placeholder="Re-enter new password"></div><button class="btn btn-primary btn-block" id="recoverySubmit" type="submit">Update password</button></form></div>
         <p style="text-align:center;color:#999;font-size:11px;margin-top:18px">Authorized staff only • Session protected</p>
@@ -2554,6 +2554,18 @@ window.showLoginPane = showLoginPane;
 // ============================================================
 function switchMethod(method) {
     if (isSubmitting) return;
+    if (method === 'pin') {
+        method = 'email';
+        currentMethod = 'email';
+        document.getElementById('pinPane')?.classList.add('hidden');
+        document.getElementById('emailPane')?.classList.remove('hidden');
+        document.getElementById('pinTab')?.classList.remove('active');
+        document.getElementById('emailTab')?.classList.add('active');
+        const authSub = document.getElementById('authSub');
+        if (authSub) authSub.textContent = 'Sign in with your email and password';
+        showAlert('PIN sign-in is currently unavailable. Please use Email Login.', 'error');
+        return;
+    }
     currentMethod = method;
 
     if (method === 'pin') {
@@ -2665,101 +2677,7 @@ async function handleLogin(e) {
         let email = '';
 
         if (currentMethod === 'pin') {
-            throw new Error('PIN login is temporarily disabled. Please use email and password so your account is securely authenticated.');
-            const pinEmail = document.getElementById('pinEmail');
-            if (!pinEmail) throw new Error('Email field not found');
-            email = pinEmail.value.trim();
-            
-            if (!email) throw new Error('Please enter your email address.');
-            if (!email.includes('@')) throw new Error('Please enter a valid email address.');
-            if (pinValue.length < 4) throw new Error('PIN must be 4 digits.');
-
-            console.log('🔍 Looking for user:', email);
-
-            // ✅ Use 'sb' instead of 'supabase'
-            const { data: user, error } = await sb
-                .from('users')
-                .select('id, email, full_name, role_id, status, pin, pin_enabled')
-                .eq('email', email)
-                .maybeSingle();
-
-            if (error) {
-                console.error('❌ Database error:', error);
-                throw new Error('Database error: ' + error.message);
-            }
-
-            if (!user) {
-                console.log('❌ User not found:', email);
-                throw new Error('User not found. Please check your email.');
-            }
-
-            console.log('✅ User found:', user.email);
-            console.log('🔐 PIN in DB:', user.pin);
-            console.log('🔑 PIN entered:', pinValue);
-
-            if (user.status !== 'active') {
-                throw new Error('Account is inactive. Please contact admin.');
-            }
-
-            if (!user.pin_enabled) {
-                throw new Error('PIN is not enabled for this account. Please use email login.');
-            }
-
-            if (user.pin !== pinValue) {
-                console.log('❌ PIN mismatch');
-                throw new Error('Invalid PIN. Please try again.');
-            }
-
-            console.log('✅ PIN verified successfully!');
-
-            let userData = { ...user, role_name: user.role || 'Cashier' };
-            try {
-                const { data: roleData } = await sb
-                    .from('roles')
-                    .select('name')
-                    .eq('id', user.role_id)
-                    .maybeSingle();
-                
-                if (roleData) {
-                    userData.role_name = roleData.name;
-                }
-            } catch (e) {
-                console.log('⚠️ Could not fetch role, using default');
-            }
-
-            let resolvedRole = userData.role_name || userData.role || '';
-            if (!resolvedRole && userData.role_id) {
-                const { data: roleRow } = await sb.from('roles').select('name').eq('id', userData.role_id).maybeSingle();
-                if (roleRow?.name) resolvedRole = roleRow.name;
-            }
-            const sessionData = {
-                user: {
-                    ...userData,
-                    role_name: resolvedRole || 'Cashier'
-                },
-                loginMethod: 'pin',
-                loginTime: Date.now()
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-
-            try {
-                await sb
-                    .from('users')
-                    .update({ last_login: new Date().toISOString() })
-                    .eq('id', user.id);
-            } catch (e) {
-                console.log('⚠️ Could not update last login');
-            }
-
-            currentUser = sessionData.user;
-            window.currentUser = currentUser;
-            currentTab = 'dashboard';
-            window.currentTab = 'dashboard';
-            showDashboard();
-            navigateTo('dashboard');
-            updateGreeting(sessionData.user);
-            showLCWelcome(sessionData.user);
-
+            throw new Error('PIN sign-in is unavailable. Select Email Login and use your password.');
         } else {
             // Email login
             const emailInput = document.getElementById('emailInput');
