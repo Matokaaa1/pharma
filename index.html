@@ -22,15 +22,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
 
     <!-- Chart.js for charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js">loadDeliveryRates();
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         /* ============================================================
-           Pharma Pharmacy · ENHANCED FASHION BOUTIQUE STYLES
+           Pharma Pharmacy · Clinical Pharmacy POS
            ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -970,13 +969,32 @@ a{color:#0f766e}
 .lc-social-live-badge{color:#065f46!important;background:#d1fae5!important}
 .lc-product-thumb.placeholder{background:#ecfdf5!important;color:#0f766e!important}
 </style>
+
+    <style id="pharmacy-clinical-pos-overrides">
+      :root { --primary:#0f766e; --primary-light:#14b8a6; --primary-dark:#115e59; --primary-gradient:linear-gradient(135deg,#0f766e,#0891b2); --secondary:#102a43; --gold:#14b8a6; --gold-light:#99f6e4; --gold-gradient:linear-gradient(135deg,#0f766e,#14b8a6); --bg:#f3f8fa; --bg-card:#fff; --text-primary:#102a43; --text-secondary:#486581; --text-muted:#627d98; --border:#d9e5ec; }
+      .sidebar-brand .brand-text { font-family:var(--font); font-style:normal; letter-spacing:-.4px; }
+      .sidebar-brand .brand-text .gold { color:#5eead4!important; }
+      .sidebar-menu li.active { background:rgba(20,184,166,.14); box-shadow:inset 3px 0 0 #2dd4bf; }
+      .sidebar-menu li.active i,.card-header h3 i { color:#5eead4; }
+      .btn-gold { color:#fff; }
+      .lc-fashion-card { border-color:#cfe8e7; background:linear-gradient(120deg,#ecfdf5,#effaff 65%,#fff); box-shadow:0 12px 28px rgba(16,42,67,.06); }
+      .lc-fashion-card.dark { background:linear-gradient(120deg,#102a43,#0f766e); color:#fff; }
+      .lc-fashion-card:after { background:rgba(20,184,166,.12); }
+      .lc-fashion-card h3 { font-style:normal; font-family:var(--font); }
+      .lc-fashion-cta { background:linear-gradient(135deg,#0f766e,#0891b2); }
+      .product-fallback { font-size:30px; }
+      .variant-badge.size,.badge.primary,.stat-card .stat-icon.purple { background:rgba(15,118,110,.1); color:#0f766e; }
+      .variant-badge.color,.badge.gold,.stat-card .stat-icon.gold { background:rgba(8,145,178,.1); color:#0e7490; }
+      @media(max-width:700px){ .lc-fashion-banner{grid-template-columns:1fr;} }
+    </style>
+
 </head>
 <body>
 
     <!-- ===== SECURE LOGIN SCREEN ===== -->
     <div class="auth-screen" id="loginScreen" style="display:flex;">
       <div class="auth-card">
-        <div class="auth-brand"><div class="auth-logo"><i class="fas fa-crown"></i></div><h1>Pharma Pharmacy</h1><p id="authSub">Professional POS & Business Management</p></div>
+        <div class="auth-brand"><div class="auth-logo"><i class="fas fa-prescription-bottle-medical"></i></div><h1>Pharma Pharmacy</h1><p id="authSub">Professional POS & Business Management</p></div>
         <div class="login-tabs"><button class="login-tab active" id="emailTab" type="button" onclick="showLoginPane('emailPane')">Email Login</button><button class="login-tab hidden" id="pinTab" type="button" style="display:none!important" aria-hidden="true" tabindex="-1" onclick="showLoginPane('emailPane')">PIN Login unavailable</button></div>
         <div id="loginAlert" class="login-alert"></div>
         <div id="pinPane" class="hidden" style="display:none!important"><div class="form-group"><label>Staff Email / Username</label><input id="pinEmail" type="text" placeholder="admin or staff email"></div><div class="pin-dots" id="pinDots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div><input id="pinInput" type="password" inputmode="numeric" maxlength="6" class="hidden"><div class="pin-keypad"><button type="button" onclick="pinKey('1')">1</button><button type="button" onclick="pinKey('2')">2</button><button type="button" onclick="pinKey('3')">3</button><button type="button" onclick="pinKey('4')">4</button><button type="button" onclick="pinKey('5')">5</button><button type="button" onclick="pinKey('6')">6</button><button type="button" onclick="pinKey('7')">7</button><button type="button" onclick="pinKey('8')">8</button><button type="button" onclick="pinKey('9')">9</button><button type="button" onclick="pinClear()">⌫</button><button type="button" onclick="pinKey('0')">0</button><button type="button" id="pinEnter" onclick="showLoginPane('emailPane')">✓</button></div></div>
@@ -1572,8 +1590,8 @@ a{color:#0f766e}
                             <option value="personal-care">Personal Care</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Gender</label>
-                        <select id="productGender"><option value="unisex">Unisex</option><option value="women">Women</option><option value="men">Men</option></select>
+                    <div class="form-group"><label>Dosage Form</label>
+                        <select id="productGender"><option value="tablet">Tablet</option><option value="capsule">Capsule</option><option value="syrup">Syrup / Suspension</option><option value="injection">Injection</option><option value="cream">Cream / Ointment</option><option value="drops">Drops</option><option value="inhaler">Inhaler</option><option value="device">Medical Device</option><option value="other">Other</option></select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1585,15 +1603,15 @@ a{color:#0f766e}
                     <div class="form-group"><label>Reorder Level</label><input type="number" id="productReorderLevel" min="0" step="1" value="5"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Colour</label><input type="text" id="productColour" placeholder="Black, Wine, Beige"></div>
-                    <div class="form-group"><label>Size / Variant</label><input type="text" id="productSize" placeholder="S, M, L, XL"></div>
+                    <div class="form-group"><label>Strength</label><input type="text" id="productColour" placeholder="e.g. 500 mg, 10 mg/5 mL"></div>
+                    <div class="form-group"><label>Pack Size / Unit</label><input type="text" id="productSize" placeholder="e.g. 100 tablets, 100 mL"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label>Supplier</label><input type="text" id="productSupplier" placeholder="Supplier name"></div>
                     <div class="form-group"><label>Barcode</label><input type="text" id="productBarcode" placeholder="Scan or enter barcode"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Material / Fabric</label><input type="text" id="productMaterial" placeholder="Cotton, Linen, Silk, etc."></div>
+                    <div class="form-group"><label>Manufacturer / Brand</label><input type="text" id="productMaterial" placeholder="Manufacturer or brand name"></div>
                     <div class="form-group"><label>Tax / VAT (%)</label><input type="number" id="productTax" min="0" step="0.01" value="0"></div>
                 </div>
                 <div class="form-row">
@@ -1601,12 +1619,12 @@ a{color:#0f766e}
                     <div class="form-group"><label>Discount / Sale Price (KES)</label><input type="number" id="productSalePrice" min="0" step="0.01" placeholder="Optional"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Fit / Style</label><input type="text" id="productFit" placeholder="Regular, Slim, Oversized, A-line..."></div>
-                    <div class="form-group"><label>Occasion</label><input type="text" id="productOccasion" placeholder="Casual, Office, Evening..."></div>
+                    <div class="form-group"><label>Active Ingredient</label><input type="text" id="productFit" placeholder="Generic / active ingredient"></div>
+                    <div class="form-group"><label>Registration / Product Reference</label><input type="text" id="productOccasion" placeholder="Optional product reference"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Care Instructions</label><input type="text" id="productCare" placeholder="Hand wash, Machine wash, Dry clean..."></div>
-                    <div class="form-group"><label>Available Sizes</label><input type="text" id="productSizes" placeholder="XS, S, M, L, XL, XXL"></div>
+                    <div class="form-group"><label>Storage Instructions</label><input type="text" id="productCare" placeholder="Store below 25°C, protect from light"></div>
+                    <div class="form-group"><label>Pack / Presentation Options</label><input type="text" id="productSizes" placeholder="Single, pack, bottle, carton"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label>Rating</label><input type="number" id="productRating" min="0" max="5" step="0.1" value="0"></div>
@@ -1622,16 +1640,16 @@ a{color:#0f766e}
 
                 <!-- 🆕 VARIANTS (Size & Color) -->
                 <div class="form-group">
-                    <label>Product Variants (Sizes & Colors)</label>
+                    <label>Medicine Variants (Strength / Dosage Form)</label>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
-                        <input type="text" id="variantSize" placeholder="Size (e.g. S, M, L)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);">
-                        <input type="text" id="variantColor" placeholder="Color (e.g. Black, Wine)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);">
+                        <input type="text" id="variantSize" placeholder="Strength / pack (e.g. 500 mg)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);">
+                        <input type="text" id="variantColor" placeholder="Dosage form (e.g. tablet, syrup)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);">
                         <input type="number" id="variantStock" placeholder="Stock" style="width:80px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);">
                         <button type="button" class="btn btn-sm btn-primary" onclick="addVariant()"><i class="fas fa-plus"></i> Add</button>
                     </div>
                     <div id="variantsContainer">
                         <table class="variants-table">
-                            <thead><tr><th>Size</th><th>Color</th><th>Stock</th><th></th></tr></thead>
+                            <thead><tr><th>Strength / Pack</th><th>Dosage Form</th><th>Units</th><th></th></tr></thead>
                             <tbody id="variantsList"></tbody>
                         </table>
                     </div>
@@ -3277,7 +3295,7 @@ function renderPOSProducts() {
         return;
     }
 
-    const iconFor = category => category === 'dress' ? '👗' : category === 'top' ? '👕' : category === 'sweater' ? '🧥' : '👔';
+    const iconFor = category => ({'otc':'💊','prescription':'💊','first-aid':'🩹','supplies':'🩺','supplements':'🧴','personal-care':'🧼','antibiotics':'💊','analgesics':'💊','devices':'🩺'}[String(category || '').toLowerCase()] || '💊');
     const sharedImageByCode = new Map((Array.isArray(SHARED_IMAGE_CATALOG) ? SHARED_IMAGE_CATALOG : []).map(x => [String(x.code), x.image_url]));
     const imageFor = p => p.image_url || sharedImageByCode.get(String(p.code || '')) || p.image || p.imageUrl || p.photo || (Array.isArray(p.images) ? p.images[0] : '') || '';
 
@@ -3292,7 +3310,7 @@ function renderPOSProducts() {
         <article class="pos-product-item ultra-product-card ${stock <= 0 ? 'out-of-stock' : ''}" onclick="${stock > 0 ? `addToCart(${p.id})` : `showToast('\${String(p.name || 'Product').replace(/'/g, "\\'")} is out of stock.','warning')`}" tabindex="0" role="button" aria-label="${stock > 0 ? 'Add' : 'View'} ${String(p.name || 'product').replace(/"/g, '&quot;')} ${stock > 0 ? 'to cart' : '(out of stock)'}">
             ${media}
             <div class="product-card-body">
-                <div class="product-meta"><span class="product-category">${String(p.category || 'fashion')}</span>${p.best_quality ? '<span class="best-dot"><i class="fas fa-star"></i></span>' : ''}</div>
+                <div class="product-meta"><span class="product-category">${String(p.category || 'medicine')}</span>${p.best_quality ? '<span class="best-dot"><i class="fas fa-star"></i></span>' : ''}</div>
                 <div class="name">${p.name || 'Unnamed product'}</div>
                 <div class="product-bottom"><div class="price">KES ${Number(p.price || 0).toLocaleString()}</div><span class="stock-pill ${stock <= 0 ? 'low' : (low ? 'low' : '')}">${stock <= 0 ? 'Out of stock' : `${stock} left`}</span></div>
             </div>
@@ -3575,7 +3593,7 @@ function generateReceipt(order) {
             <div class="receipt-brand">
                 <div class="receipt-logo"><i class="fas fa-crown"></i></div>
                 <h2>Pharma Pharmacy</h2>
-                <p>Women's Fashion · Style · Confidence</p>
+                <p>Medicine dispensing · Accurate stock · Patient safety</p>
             </div>
 
             <div class="receipt-meta receipt-meta-thermal">
@@ -5326,7 +5344,7 @@ textarea:focus{
 
 /* ============================================================
    Pharma Pharmacy 2026 RETAIL IMPLEMENTATION
-   Fashion POS: purple + pink + deep navy
+   Pharmacy POS: clinical teal + medical blue + deep navy
    ============================================================ */
 :root{--lc-purple:#7c3aed;--lc-purple2:#9333ea;--lc-pink:#ec4899;--lc-pink2:#f9a8d4;--lc-navy:#10152f;--lc-navy2:#182044;--lc-lav:#f5f3ff;--lc-blush:#fff1f7}
 body{background:linear-gradient(135deg,#f8f7ff 0%,#fff7fb 48%,#f4f7ff 100%)}
