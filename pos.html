@@ -1190,6 +1190,13 @@ a{color:#0f766e}
                         <button class="btn btn-sm btn-warning" onclick="switchCategory('prescription')"><i class="fas fa-prescription"></i> Prescription</button>
                         <button class="btn btn-sm btn-info" onclick="switchCategory('first-aid')"><i class="fas fa-kit-medical"></i> First Aid</button>
                         <button class="btn btn-sm btn-danger" onclick="switchCategory('supplies')"><i class="fas fa-briefcase-medical"></i> Medical Supplies</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('devices')"><i class="fas fa-stethoscope"></i> Devices</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('consumables')"><i class="fas fa-boxes-stacked"></i> Consumables</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('wound-care')"><i class="fas fa-bandage"></i> Wound Care</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('diagnostics')"><i class="fas fa-vial"></i> Diagnostics</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('personal-care')"><i class="fas fa-pump-soap"></i> Personal Care</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('baby-maternity')"><i class="fas fa-baby"></i> Baby & Maternity</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('all-non-pharma')"><i class="fas fa-kit-medical"></i> Non-pharmaceuticals</button>
                     </div>
                 </div>
                 <div id="posContainer">
@@ -1662,8 +1669,17 @@ a{color:#0f766e}
                             <option value="prescription">Prescription Medicine</option>
                             <option value="first-aid">First Aid</option>
                             <option value="supplies">Medical Supplies</option>
-                            <option value="supplements">Supplements</option>
-                            <option value="personal-care">Personal Care</option>
+                            <option value="devices">Medical Devices & Equipment</option>
+                            <option value="consumables">Medical Consumables</option>
+                            <option value="wound-care">Wound Care & Dressings</option>
+                            <option value="diagnostics">Diagnostics & Test Kits</option>
+                            <option value="supplements">Vitamins & Supplements</option>
+                            <option value="personal-care">Personal Care & Hygiene</option>
+                            <option value="baby-maternity">Baby & Maternity Care</option>
+                            <option value="oral-care">Oral Care</option>
+                            <option value="home-care">Home Healthcare</option>
+                            <option value="veterinary">Veterinary Products</option>
+                            <option value="other-non-pharma">Other Non-pharmaceuticals</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Dosage Form</label>
@@ -1707,7 +1723,7 @@ a{color:#0f766e}
                     <div class="form-group"><label>Reviews Count</label><input type="number" id="productReviews" min="0" step="1" value="0"></div>
                 </div>
                 <div class="form-group"><label>Description</label><textarea id="productDescription" rows="5" placeholder="Write the full product description customers should see..."></textarea></div>
-                <div class="form-group"><label>Product Tags</label><input type="text" id="productTags" placeholder="new, trending, best seller, summer"></div>
+                <div class="form-group"><label>Product Tags</label><input type="text" id="productTags" placeholder="brand, storage, cold-chain, non-pharmaceutical"></div>
                 <div class="form-group">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                         <input type="checkbox" id="productBestQuality"> Best Quality
@@ -1716,7 +1732,7 @@ a{color:#0f766e}
 
                 <!-- 🆕 VARIANTS (Size & Color) -->
                 <div class="form-group">
-                    <label>Medicine Variants (Strength / Dosage Form)</label>
+                    <label>Pack / Product Variants (Strength, size or presentation)</label>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
                         <input type="text" id="variantSize" placeholder="Strength / pack (e.g. 500 mg)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);">
                         <input type="text" id="variantColor" placeholder="Dosage form (e.g. tablet, syrup)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);">
@@ -3368,7 +3384,8 @@ function renderPOSProducts() {
         const name = String(p.name || '').toLowerCase();
         const code = String(p.code || '').toLowerCase();
         const matchSearch = name.includes(searchValue) || code.includes(searchValue);
-        const matchCategory = currentCategory === 'all' || p.category === currentCategory;
+        const nonPharmaCategories = ['first-aid','supplies','devices','consumables','wound-care','diagnostics','personal-care','baby-maternity','oral-care','home-care','veterinary','other-non-pharma','supplements'];
+        const matchCategory = currentCategory === 'all' || (currentCategory === 'all-non-pharma' ? nonPharmaCategories.includes(String(p.category || '').toLowerCase()) : p.category === currentCategory);
         // Show EVERY product in the POS catalogue, including zero-stock items.
         // Out-of-stock items remain visible but cannot be added to the cart.
         return matchSearch && matchCategory;
@@ -3379,7 +3396,7 @@ function renderPOSProducts() {
         return;
     }
 
-    const iconFor = category => ({'otc':'💊','prescription':'💊','first-aid':'🩹','supplies':'🩺','supplements':'🧴','personal-care':'🧼','antibiotics':'💊','analgesics':'💊','devices':'🩺'}[String(category || '').toLowerCase()] || '💊');
+    const iconFor = category => ({'otc':'💊','prescription':'💊','first-aid':'🩹','supplies':'🩺','consumables':'🧤','wound-care':'🩹','diagnostics':'🧪','supplements':'🧴','personal-care':'🧼','baby-maternity':'🍼','oral-care':'🪥','home-care':'🩺','veterinary':'🐾','other-non-pharma':'📦','antibiotics':'💊','analgesics':'💊','devices':'🩺'}[String(category || '').toLowerCase()] || '💊');
     const sharedImageByCode = new Map((Array.isArray(SHARED_IMAGE_CATALOG) ? SHARED_IMAGE_CATALOG : []).map(x => [String(x.code), x.image_url]));
     const imageFor = p => p.image_url || sharedImageByCode.get(String(p.code || '')) || p.image || p.imageUrl || p.photo || (Array.isArray(p.images) ? p.images[0] : '') || '';
 
@@ -6696,7 +6713,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const price=Number(val('productSalePrice')||val('productPrice')||0);
     const category=val('productCategory').trim();
     const tags=val('productTags').split(',').map(x=>x.trim()).filter(Boolean).slice(0,5);
-    const caption=`✨ NEW ARRIVAL ✨\n\n${name}${category?' · '+category:''}\n${price?'KSh '+price.toLocaleString('en-KE'):''}\n\nAvailable now at Pharma Pharmacy. Shop online today.\n\n#pharmapharmacy #Fashion #NewArrival${tags.map(t=>' #'+t.replace(/[^a-z0-9]/gi,'')).join('')}`;
+    const caption=`✨ NEW ARRIVAL ✨\n\n${name}${category?' · '+category:''}\n${price?'KSh '+price.toLocaleString('en-KE'):''}\n\nAvailable now at Pharma Pharmacy. Shop online today.\n\n#pharmapharmacy #Pharmacy #Healthcare${tags.map(t=>' #'+t.replace(/[^a-z0-9]/gi,'')).join('')}`;
     const el=document.getElementById('productSocialCaption'); if(el)el.value=caption;
   };
   window.queueProductSocialPublish=async function(){
