@@ -7,7 +7,9 @@
 
 ## Current setup
 
-- `index.html` — pharmacy-branded POS UI, Supabase connection, email/password sign-in, Supabase-session validation, and password-reset request.
+- `index.html` — public, responsive pharmacy marketing landing page with feature overview and clear staff sign-in links.
+- `pos.html` — pharmacy POS workspace, Supabase connection, email/password sign-in, Supabase-session validation, and password-reset request.
+- Staff login is available from the landing page and opens `pos.html`.
 - `pharmacy_pos_schema.sql` — pharmacy products, batches/expiry, prescriptions, dispensing, stock movements, role/profile setup, and active-staff RLS policies.
 - `README.md` — setup and operational status.
 
