@@ -4015,7 +4015,7 @@ function renderProductsTable() {
                         <tr>
                             <td>
                                 <div style="display:flex;align-items:center;gap:10px;">
-                                    ${p.image_url ? `<img src="${String(p.image_url).replace(/"/g,'&quot;')}" alt="" loading="lazy" style="width:46px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--border);background:#fff;" onerror="this.style.display='none'">` : `<span style="font-size:24px;">${p.category === 'dress' ? '👗' : p.category === 'top' ? '👕' : '👔'}</span>`}
+                                    ${p.image_url && String(p.image_url).trim().match(/^https?:\/\//i) ? '<img src="' + String(p.image_url).trim().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'%3C') + '" alt="" loading="lazy" style="width:46px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--border);background:#fff;" onerror="this.style.display=\'none\'">' : '<span style="font-size:24px;">💊</span>'}
                                     <div>
                                         <div style="font-weight:600;">${p.name}</div>
                                         <div style="font-size:12px;color:var(--text-muted);">${p.code || 'N/A'}</div>
