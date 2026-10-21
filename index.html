@@ -1132,8 +1132,8 @@ a{color:#0f766e}
             </div>
 
             <div class="lc-fashion-banner">
-                <div class="lc-fashion-card"><h3>More Than Fashion</h3><p>It's a lifestyle · Quality · Style · Confidence</p><span class="lc-fashion-cta" onclick="navigateTo('pos')">Grow Your Business <i class="fas fa-arrow-right" style="margin-left:6px"></i></span></div>
-                <div class="lc-fashion-card dark"><h3>Style With Confidence</h3><p>Keep your catalogue fresh and your customers coming back.</p><span class="lc-fashion-cta" onclick="navigateTo('products')">View Products <i class="fas fa-arrow-right" style="margin-left:6px"></i></span></div>
+                <div class="lc-fashion-card"><h3>Smarter Pharmacy Operations</h3><p>Accurate sales · Stock control · Better patient service</p><span class="lc-fashion-cta" onclick="navigateTo('pos')">Open Point of Sale <i class="fas fa-arrow-right" style="margin-left:6px"></i></span></div>
+                <div class="lc-fashion-card dark"><h3>Control Every Medicine</h3><p>Manage products, batches, stock levels and expiry dates.</p><span class="lc-fashion-cta" onclick="navigateTo('products')">Manage Inventory <i class="fas fa-arrow-right" style="margin-left:6px"></i></span></div>
             </div>
             <div class="lc-dashboard-footer"><span>© ${new Date().getFullYear()} Pharma Pharmacy. All rights reserved.</span><span>Powered by <strong>CampusNexus</strong> · 0790969743</span></div>
         </section>
@@ -1145,10 +1145,10 @@ a{color:#0f766e}
                     <h3>🛒 Point of Sale</h3>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <button class="btn btn-sm btn-primary" onclick="switchCategory('all')">All</button>
-                        <button class="btn btn-sm btn-success" onclick="switchCategory('dress')">👗 Dresses</button>
-                        <button class="btn btn-sm btn-warning" onclick="switchCategory('top')">👕 Tops</button>
-                        <button class="btn btn-sm btn-info" onclick="switchCategory('sweater')">🧥 Sweaters</button>
-                        <button class="btn btn-sm btn-danger" onclick="switchCategory('suit')">👔 Suits</button>
+                        <button class="btn btn-sm btn-success" onclick="switchCategory('otc')"><i class="fas fa-capsules"></i> OTC Medicines</button>
+                        <button class="btn btn-sm btn-warning" onclick="switchCategory('prescription')"><i class="fas fa-prescription"></i> Prescription</button>
+                        <button class="btn btn-sm btn-info" onclick="switchCategory('first-aid')"><i class="fas fa-kit-medical"></i> First Aid</button>
+                        <button class="btn btn-sm btn-danger" onclick="switchCategory('supplies')"><i class="fas fa-briefcase-medical"></i> Medical Supplies</button>
                     </div>
                 </div>
                 <div id="posContainer">
@@ -1546,12 +1546,12 @@ a{color:#0f766e}
                     <div class="form-group"><label>Category <span class="required">*</span></label>
                         <select id="productCategory" required>
                             <option value="">Select</option>
-                            <option value="dress">Dress</option>
-                            <option value="top">Top</option>
-                            <option value="sweater">Sweater</option>
-                            <option value="suit">Suit</option>
-                            <option value="shoes">Shoes</option>
-                            <option value="accessories">Accessories</option>
+                            <option value="otc">OTC Medicine</option>
+                            <option value="prescription">Prescription Medicine</option>
+                            <option value="first-aid">First Aid</option>
+                            <option value="supplies">Medical Supplies</option>
+                            <option value="supplements">Supplements</option>
+                            <option value="personal-care">Personal Care</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Gender</label>
@@ -1653,7 +1653,7 @@ a{color:#0f766e}
                     </div>
                     <div class="form-group" style="margin-top:12px">
                         <label>Social Caption</label>
-                        <textarea id="productSocialCaption" rows="4" placeholder="New arrival ✨\n\nShop this piece at Pharma Pharmacy.\n\n#pharmapharmacy #NewArrival #Fashion"></textarea>
+                        <textarea id="productSocialCaption" rows="4" placeholder="Medicine or health product update\n\nAvailable at Pharma Pharmacy.\n\n#PharmaPharmacy #Healthcare #Pharmacy"></textarea>
                     </div>
                     <div class="lc-social-publish-actions">
                         <button type="button" class="btn btn-outline" onclick="generateProductSocialCaption()"><i class="fas fa-wand-magic-sparkles"></i> Generate Caption</button>
@@ -1940,7 +1940,7 @@ function seedInstantPOSCatalogue(){
     if(!Array.isArray(SHARED_IMAGE_CATALOG)||!SHARED_IMAGE_CATALOG.length)return;
     if(!Array.isArray(products)) products=[];
     const existing=new Map(products.map(p=>[String(p.code||''),p]));
-    const categoryFor=name=>{const n=String(name||'').toLowerCase();if(/shirt|top|cardigan/.test(n))return 'top';if(/suit/.test(n))return 'suit';if(/sweater|knit/.test(n))return 'sweater';return 'dress';};
+    const categoryFor=name=>{const n=String(name||'').toLowerCase();if(/prescription|antibiotic|controlled/.test(n))return 'prescription';if(/bandage|gauze|first aid/.test(n))return 'first-aid';if(/supply|syringe|glove/.test(n))return 'supplies';return 'otc';};
     SHARED_IMAGE_CATALOG.forEach((x,i)=>{
         const code=String(x.code||''); const p=existing.get(code);
         if(p){ if(!p.image_url)p.image_url=x.image_url; if(!p.name)p.name=x.name; return; }
@@ -1985,22 +1985,8 @@ window.mergeSharedImageCatalog = mergeSharedImageCatalog;
 // GET DEFAULT PRODUCTS
 // ============================================================
 function getDefaultProducts() {
-    return [
-        { id: 1, code: '0001#', name: 'Classic Silk Dress', category: 'dress', gender: 'women', price: 500, stock: 12,
-            image_url: null, best_quality: true, rating: 4.8 },
-        { id: 2, code: '6195-1#', name: 'Summer Floral Dress', category: 'dress', gender: 'women', price: 500, stock: 6,
-            image_url: null, best_quality: false, rating: 4.2 },
-        { id: 3, code: '6169-145A', name: 'Elegant Evening Gown', category: 'dress', gender: 'women', price: 600, stock: 6,
-            image_url: null, best_quality: true, rating: 4.9 },
-        { id: 4, code: '5918', name: 'Pie Top', category: 'top', gender: 'women', price: 600, stock: 10, image_url: null,
-            best_quality: false, rating: 4.2 },
-        { id: 5, code: '5918 1', name: 'Polo Top with A-Top', category: 'top', gender: 'unisex', price: 700, stock: 10,
-            image_url: null, best_quality: true, rating: 4.6 },
-        { id: 6, code: '13802', name: 'Cashmere Blend Sweater', category: 'sweater', gender: 'men', price: 650, stock: 8,
-            image_url: null, best_quality: true, rating: 4.7 },
-        { id: 7, code: 'S001', name: 'Tailored Wool Suit', category: 'suit', gender: 'men', price: 1200, stock: 5,
-            image_url: null, best_quality: true, rating: 4.9 },
-    ];
+    // Start empty: staff should enter verified medicine details, prices, batch numbers and stock.
+    return [];
 }
 
 // ============================================================
@@ -3127,7 +3113,7 @@ function renderTopProducts() {
     const shared=new Map((Array.isArray(SHARED_IMAGE_CATALOG)?SHARED_IMAGE_CATALOG:[]).map(x=>[String(x.code),x.image_url]));
     container.innerHTML=sorted.map((p,i)=>{
         const db=byId[String(p.id)]; const img=db?.image_url||shared.get(String(db?.code||''));
-        const thumb=img?`<img class="lc-product-thumb" src="${lcEscape(img)}" alt="" loading="lazy">`:`<div class="lc-product-thumb placeholder">${db?.category==='dress'?'👗':db?.category==='top'?'👕':'👜'}</div>`;
+        const thumb=img?`<img class="lc-product-thumb" src="${lcEscape(img)}" alt="" loading="lazy">`:`<div class="lc-product-thumb placeholder">${db?.category==='prescription'?'💊':db?.category==='first-aid'?'🩹':'🧴'}</div>`;
         return `<div class="lc-top-product"><span class="lc-rank">${i+1}</span>${thumb}<div><div class="lc-product-name" title="${lcEscape(p.name)}">${lcEscape(p.name)}</div><div class="lc-product-meta">${p.qty} unit${p.qty===1?'':'s'} sold</div></div><div class="lc-product-revenue">KES ${Number(p.revenue).toLocaleString('en-KE')}</div></div>`;
     }).join('');
 }
