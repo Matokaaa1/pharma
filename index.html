@@ -1021,6 +1021,9 @@ a{color:#0f766e}
             <li class="menu-label">Management</li>
             <li data-section="products"><i class="fas fa-boxes"></i> Products</li>
             <li data-section="gallery"><i class="fas fa-images"></i> Photo Gallery <span class="badge" id="galleryBadge">46</span></li>
+            <li data-section="pharmacyInventory"><i class="fas fa-prescription-bottle-medical"></i> Medicines Catalogue</li>
+            <li data-section="pharmacyBatches"><i class="fas fa-calendar-xmark"></i> Batches & Expiry</li>
+            <li data-section="pharmacyPrescriptions"><i class="fas fa-file-prescription"></i> Prescription Register</li>
             <li data-section="inventory"><i class="fas fa-warehouse"></i> Inventory</li>
             <li data-section="customers"><i class="fas fa-user-friends"></i> Customers</li>
             <li data-section="suppliers"><i class="fas fa-truck"></i> Suppliers</li>
@@ -1563,7 +1566,69 @@ a{color:#0f766e}
     </div>
 
 
-    <!-- ===== MODALS ===== -->
+
+        <!-- ===== PHARMACY-SPECIFIC WORKSPACE ===== -->
+        <section id="pharmacyInventorySection" class="section-page">
+          <div class="card">
+            <div class="card-header"><div><h3><i class="fas fa-prescription-bottle-medical"></i> Medicines Catalogue</h3><p class="pharma-muted">Clinical catalogue with active ingredient, strength, dosage form and prescription controls.</p></div><button class="btn btn-primary" onclick="pharmaOpenMedicineForm()"><i class="fas fa-plus"></i> Add Medicine</button></div>
+            <div class="pharma-toolbar"><input id="pharmaMedicineSearch" placeholder="Search medicine, SKU, barcode or ingredient..." oninput="pharmaRenderMedicines()"><button class="btn btn-outline" onclick="pharmaLoadAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+            <div id="pharmaMedicineStats" class="pharma-mini-stats"></div>
+            <div id="pharmaMedicineTable" class="table-wrapper"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading medicine catalogue…</p></div></div>
+          </div>
+        </section>
+        <section id="pharmacyBatchesSection" class="section-page">
+          <div class="card">
+            <div class="card-header"><div><h3><i class="fas fa-calendar-xmark"></i> Batch & Expiry Control</h3><p class="pharma-muted">Track received batches, available units, suppliers and expiry dates. Prioritize earliest-expiring stock.</p></div><button class="btn btn-primary" onclick="pharmaOpenBatchForm()"><i class="fas fa-plus"></i> Receive Batch</button></div>
+            <div class="pharma-toolbar"><input id="pharmaBatchSearch" placeholder="Search batch, medicine or supplier..." oninput="pharmaRenderBatches()"><select id="pharmaBatchFilter" onchange="pharmaRenderBatches()"><option value="all">All batches</option><option value="expiring">Expiring within 90 days</option><option value="expired">Expired</option><option value="low">No available units</option></select></div>
+            <div id="pharmaBatchStats" class="pharma-mini-stats"></div>
+            <div id="pharmaBatchTable" class="table-wrapper"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading batches…</p></div></div>
+          </div>
+        </section>
+        <section id="pharmacyPrescriptionsSection" class="section-page">
+          <div class="card">
+            <div class="card-header"><div><h3><i class="fas fa-file-prescription"></i> Prescription Register</h3><p class="pharma-muted">Record prescriber details, validity and pharmacist validation status before dispensing.</p></div><button class="btn btn-primary" onclick="pharmaOpenPrescriptionForm()"><i class="fas fa-plus"></i> Register Prescription</button></div>
+            <div class="pharma-toolbar"><input id="pharmaPrescriptionSearch" placeholder="Search prescription number, patient or prescriber..." oninput="pharmaRenderPrescriptions()"><select id="pharmaPrescriptionFilter" onchange="pharmaRenderPrescriptions()"><option value="all">All statuses</option><option value="pending">Pending validation</option><option value="validated">Validated</option><option value="dispensed">Dispensed</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option></select></div>
+            <div id="pharmaPrescriptionTable" class="table-wrapper"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading prescription register…</p></div></div>
+          </div>
+        </section>
+
+        <!-- Pharmacy-specific forms -->
+        <div class="modal-overlay" id="pharmaMedicineModal"><div class="modal modal-lg">
+          <div class="modal-header"><h3><i class="fas fa-capsules"></i> Add Medicine</h3><button class="close" onclick="pharmaCloseModal('pharmaMedicineModal')">&times;</button></div>
+          <form id="pharmaMedicineForm" onsubmit="pharmaSaveMedicine(event)">
+            <div class="form-row"><div class="form-group"><label>Medicine name *</label><input id="pharmaMedName" required></div><div class="form-group"><label>SKU / Internal code</label><input id="pharmaMedSku"></div></div>
+            <div class="form-row"><div class="form-group"><label>Barcode</label><input id="pharmaMedBarcode"></div><div class="form-group"><label>Category *</label><select id="pharmaMedCategory" required><option value="General">General</option><option>Prescription Medicine</option><option>OTC Medicine</option><option>Antibiotic</option><option>Analgesic</option><option>First Aid</option><option>Medical Device</option><option>Supplement</option><option>Personal Care</option></select></div></div>
+            <div class="form-row"><div class="form-group"><label>Active ingredient</label><input id="pharmaMedIngredient"></div><div class="form-group"><label>Strength</label><input id="pharmaMedStrength" placeholder="e.g. 500 mg, 10 mg/5 mL"></div></div>
+            <div class="form-row"><div class="form-group"><label>Dosage form</label><select id="pharmaMedForm"><option value="">Select form</option><option>Tablet</option><option>Capsule</option><option>Syrup / Suspension</option><option>Injection</option><option>Cream / Ointment</option><option>Drops</option><option>Inhaler</option><option>Suppository</option><option>Medical device</option><option>Other</option></select></div><div class="form-group"><label>Selling price (KES) *</label><input id="pharmaMedPrice" type="number" min="0" step="0.01" required value="0"></div></div>
+            <div class="form-row"><div class="form-group"><label>Reorder level (units)</label><input id="pharmaMedReorder" type="number" min="0" step="1" value="0"></div><div class="form-group"><label>Prescription required?</label><select id="pharmaMedRx"><option value="false">No — OTC / non-prescription</option><option value="true">Yes — prescription required</option></select></div></div>
+            <p class="pharma-form-note">Batch number, expiry date and quantities are recorded separately under Batches & Expiry.</p>
+            <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="pharmaCloseModal('pharmaMedicineModal')">Cancel</button><button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Save Medicine</button></div>
+          </form>
+        </div></div>
+        <div class="modal-overlay" id="pharmaBatchModal"><div class="modal modal-lg">
+          <div class="modal-header"><h3><i class="fas fa-boxes-stacked"></i> Receive Medicine Batch</h3><button class="close" onclick="pharmaCloseModal('pharmaBatchModal')">&times;</button></div>
+          <form id="pharmaBatchForm" onsubmit="pharmaSaveBatch(event)">
+            <div class="form-group"><label>Medicine *</label><select id="pharmaBatchProduct" required></select></div>
+            <div class="form-row"><div class="form-group"><label>Batch / Lot number *</label><input id="pharmaBatchNumber" required></div><div class="form-group"><label>Expiry date *</label><input id="pharmaBatchExpiry" type="date" required></div></div>
+            <div class="form-row"><div class="form-group"><label>Quantity received *</label><input id="pharmaBatchQty" type="number" min="1" step="1" required></div><div class="form-group"><label>Cost per unit (KES)</label><input id="pharmaBatchCost" type="number" min="0" step="0.01" value="0"></div></div>
+            <div class="form-row"><div class="form-group"><label>Selling price (KES)</label><input id="pharmaBatchPrice" type="number" min="0" step="0.01" value="0"></div><div class="form-group"><label>Supplier</label><input id="pharmaBatchSupplier"></div></div>
+            <div class="form-group"><label>Purchase / delivery reference</label><input id="pharmaBatchRef"></div>
+            <p class="pharma-form-note">Do not receive expired stock. Expiry and available quantity are tracked at batch level.</p>
+            <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="pharmaCloseModal('pharmaBatchModal')">Cancel</button><button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> Receive Batch</button></div>
+          </form>
+        </div></div>
+        <div class="modal-overlay" id="pharmaPrescriptionModal"><div class="modal modal-lg">
+          <div class="modal-header"><h3><i class="fas fa-file-prescription"></i> Register Prescription</h3><button class="close" onclick="pharmaCloseModal('pharmaPrescriptionModal')">&times;</button></div>
+          <form id="pharmaPrescriptionForm" onsubmit="pharmaSavePrescription(event)">
+            <div class="form-row"><div class="form-group"><label>Prescription number *</label><input id="pharmaRxNumber" required></div><div class="form-group"><label>Patient name *</label><input id="pharmaRxPatient" required></div></div>
+            <div class="form-row"><div class="form-group"><label>Patient reference (optional)</label><input id="pharmaRxPatientRef"></div><div class="form-group"><label>Prescriber name *</label><input id="pharmaRxPrescriber" required></div></div>
+            <div class="form-row"><div class="form-group"><label>Prescriber registration number</label><input id="pharmaRxRegistration"></div><div class="form-group"><label>Valid until</label><input id="pharmaRxValidUntil" type="date"></div></div>
+            <div class="form-group"><label>Notes</label><textarea id="pharmaRxNotes" rows="3" placeholder="Prescription review notes; avoid unnecessary patient information."></textarea></div>
+            <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="pharmaCloseModal('pharmaPrescriptionModal')">Cancel</button><button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Save Prescription</button></div>
+          </form>
+        </div></div>
+
+        <!-- ===== MODALS ===== -->
 
     <!-- Product Modal (Enhanced with Variants & Image Gallery) -->
     <div class="modal-overlay" id="productModal">
@@ -2823,6 +2888,9 @@ function navigateTo(section) {
         'orders': 'ordersSection',
         'products': 'productsSection',
         'gallery': 'gallerySection',
+        'pharmacyInventory': 'pharmacyInventorySection',
+        'pharmacyBatches': 'pharmacyBatchesSection',
+        'pharmacyPrescriptions': 'pharmacyPrescriptionsSection',
         'inventory': 'inventorySection',
         'customers': 'customersSection',
         'reports': 'reportsSection',
@@ -2856,6 +2924,9 @@ function navigateTo(section) {
         'orders': '📋 Orders',
         'products': '📦 Products',
         'gallery': '🖼️ Photo Gallery',
+        'pharmacyInventory': '💊 Medicines Catalogue',
+        'pharmacyBatches': '📅 Batches & Expiry',
+        'pharmacyPrescriptions': '🧾 Prescription Register',
         'inventory': '🏪 Inventory',
         'customers': '👤 Customers',
         'reports': '📊 Reports',
@@ -3788,6 +3859,89 @@ function openGalleryImage(url,name){
     w.document.write(`<!doctype html><title>${String(name||'Product').replace(/</g,'&lt;')}</title><body style="margin:0;background:#faf7ff;display:grid;place-items:center;min-height:100vh"><img src="${String(url).replace(/"/g,'&quot;')}" alt="" style="max-width:94vw;max-height:94vh;object-fit:contain;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
 
 
+
+
+<style id="pharmacy-true-clinical-theme">
+:root{--primary:#0f766e!important;--primary-light:#14b8a6!important;--primary-dark:#115e59!important;--primary-gradient:linear-gradient(135deg,#0f766e,#0891b2)!important;--secondary:#102a43!important;--gold:#14b8a6!important;--gold-light:#99f6e4!important;--gold-gradient:linear-gradient(135deg,#0f766e,#14b8a6)!important;--bg:#f3f8fa!important;--bg-card:#fff!important;--text-primary:#102a43!important;--text-secondary:#486581!important;--text-muted:#627d98!important;--border:#d9e5ec!important;--ultra-burg:#0f766e!important;--ultra-burg2:#0891b2!important;--ultra-gold:#14b8a6!important}
+body{background:#f3f8fa!important}
+.sidebar{background:linear-gradient(180deg,#102a43,#0b3b4a)!important;border-color:rgba(20,184,166,.18)!important}
+.sidebar-brand .logo-icon,.auth-logo{background:linear-gradient(135deg,#0f766e,#0891b2)!important;box-shadow:0 10px 28px rgba(15,118,110,.25)!important}
+.sidebar-brand .brand-text{font-family:var(--font)!important;font-style:normal!important}
+.sidebar-brand .brand-text .gold,.sidebar-menu li.active i{color:#5eead4!important}
+.sidebar-menu li:hover{background:rgba(20,184,166,.12)!important}
+.sidebar-menu li.active{background:rgba(20,184,166,.14)!important;box-shadow:inset 3px 0 0 #2dd4bf!important}
+.top-bar .page-title h1{-webkit-text-fill-color:transparent!important;background:linear-gradient(135deg,#0f766e,#0891b2)!important;background-clip:text!important;-webkit-background-clip:text!important}
+.btn-primary,.filter-tabs .filter-btn.active,.lc-social-publish-head,.stk-modal-head{background:linear-gradient(135deg,#0f766e,#0891b2)!important;box-shadow:0 8px 22px rgba(15,118,110,.18)!important}
+.quick-action i,.card-header h3 i{color:#0f766e!important}
+.stat-card:nth-child(1) .stat-icon,.stat-card:nth-child(2) .stat-icon,.stat-card:nth-child(4) .stat-icon{background:rgba(15,118,110,.10)!important;color:#0f766e!important}
+.ultra-product-card .price,.cart-item .item-total,.cart-footer .cart-total span:last-child{color:#0f766e!important}
+.product-media{background:linear-gradient(135deg,#ecfdf5,#effaff)!important}
+.auth-screen{background:radial-gradient(circle at 12% 12%,rgba(20,184,166,.16),transparent 24%),linear-gradient(135deg,#102a43,#0f766e)!important}
+.lc-fashion-card{border-color:#cfe8e7!important;background:linear-gradient(120deg,#ecfdf5,#effaff 65%,#fff)!important}
+.lc-fashion-card.dark{background:linear-gradient(120deg,#102a43,#0f766e)!important}
+.pharma-muted{font-size:12px;color:var(--text-muted);margin-top:5px}.pharma-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.pharma-toolbar input{flex:1;min-width:220px}.pharma-toolbar input,.pharma-toolbar select{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text-primary)}.pharma-mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:14px 0}.pharma-mini-stats>div{border:1px solid var(--border);background:var(--bg-card);border-radius:12px;padding:13px 15px}.pharma-mini-stats strong{display:block;font-size:22px;color:var(--primary)}.pharma-mini-stats span,.pharma-cell-sub{display:block;font-size:11px;color:var(--text-muted);margin-top:4px}.pharma-form-note{font-size:12px;line-height:1.5;color:var(--text-secondary);background:#ecfdf5;border:1px solid #c7f0e8;padding:10px 12px;border-radius:10px;margin:8px 0 16px}
+@media(max-width:650px){.pharma-toolbar input{min-width:100%}.pharma-mini-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+
+<script id="pharmacy-operations-v1">
+(function(){
+ const $=id=>document.getElementById(id), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const money=v=>'KES '+Number(v||0).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const today=()=>new Date().toISOString().slice(0,10);
+ let meds=[], batches=[], prescriptions=[];
+ function client(){const c=window.sb||window.supabaseClient; if(!c||!c.from)throw new Error('Secure database connection is not ready. Please sign in again.');return c;}
+ async function actor(){try{const r=await client().auth.getUser();return r.data?.user||null;}catch(_){return null;}}
+ function notify(msg,type='success'){if(typeof window.showToast==='function')window.showToast(msg,type);else alert(msg);}
+ function errMsg(e){return e?.message||'Unexpected error. Please retry.';}
+ window.pharmaCloseModal=id=>{const m=$(id);if(m)m.classList.remove('active');};
+ function open(id){const m=$(id);if(m)m.classList.add('active');}
+ window.pharmaOpenMedicineForm=()=>{$('pharmaMedicineForm')?.reset();$('pharmaMedPrice').value='0';$('pharmaMedReorder').value='0';open('pharmaMedicineModal');};
+ window.pharmaOpenBatchForm=()=>{if(!meds.length){notify('Add a medicine to the catalogue before receiving a batch.','warning');return;}const sel=$('pharmaBatchProduct');sel.innerHTML=meds.filter(m=>m.active!==false).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+' · '+esc(m.strength||'strength not set')+'</option>').join('');$('pharmaBatchForm')?.reset();$('pharmaBatchQty').value='1';$('pharmaBatchCost').value='0';$('pharmaBatchPrice').value=Number(meds[0]?.selling_price||0);open('pharmaBatchModal');};
+ window.pharmaOpenPrescriptionForm=()=>{$('pharmaPrescriptionForm')?.reset();$('pharmaRxValidUntil').min=today();open('pharmaPrescriptionModal');};
+ window.pharmaLoadAll=async function(){
+  for(const id of ['pharmaMedicineTable','pharmaBatchTable','pharmaPrescriptionTable'])if($(id))$(id).innerHTML='<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading pharmacy records…</p></div>';
+  try{
+   const c=client();
+   const [m,b,p]=await Promise.all([
+    c.from('pharmacy_products').select('*').order('name'),
+    c.from('pharmacy_batches').select('*,pharmacy_products(name,sku,strength,dosage_form)').order('expiry_date'),
+    c.from('pharmacy_prescriptions').select('*').order('created_at',{ascending:false})
+   ]);
+   if(m.error)throw m.error;if(b.error)throw b.error;if(p.error)throw p.error;
+   meds=m.data||[];batches=b.data||[];prescriptions=p.data||[];
+   window.pharmaRenderMedicines();window.pharmaRenderBatches();window.pharmaRenderPrescriptions();
+  }catch(e){console.error('[Pharmacy POS] load failed',e);for(const id of ['pharmaMedicineTable','pharmaBatchTable','pharmaPrescriptionTable'])if($(id))$(id).innerHTML='<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h4>Could not load pharmacy records</h4><p>'+esc(errMsg(e))+'</p><button class="btn btn-outline" onclick="pharmaLoadAll()">Retry</button></div>';}
+ };
+ window.pharmaRenderMedicines=function(){
+  const q=String($('pharmaMedicineSearch')?.value||'').toLowerCase();
+  const list=meds.filter(m=>[m.name,m.sku,m.barcode,m.active_ingredient,m.strength,m.category].some(v=>String(v||'').toLowerCase().includes(q)));
+  const low=meds.filter(m=>batches.filter(b=>b.product_id===m.id&&b.expiry_date>=today()).reduce((n,b)=>n+Number(b.quantity_available||0),0)<=Number(m.reorder_level||0)).length;
+  if($('pharmaMedicineStats'))$('pharmaMedicineStats').innerHTML='<div><strong>'+meds.length+'</strong><span>Catalogue items</span></div><div><strong>'+meds.filter(m=>m.prescription_required).length+'</strong><span>Prescription-only</span></div><div><strong>'+low+'</strong><span>At / below reorder level</span></div>';
+  const box=$('pharmaMedicineTable');if(!box)return;
+  box.innerHTML=list.length?'<table class="data-table"><thead><tr><th>Medicine</th><th>Ingredient / Strength</th><th>Form</th><th>Price</th><th>Available units</th><th>Rx</th><th>Status</th></tr></thead><tbody>'+list.map(m=>{const stock=batches.filter(b=>b.product_id===m.id&&b.expiry_date>=today()).reduce((n,b)=>n+Number(b.quantity_available||0),0);return '<tr><td><strong>'+esc(m.name)+'</strong><small class="pharma-cell-sub">'+esc(m.sku||m.barcode||'No SKU')+'</small></td><td>'+esc(m.active_ingredient||'—')+'<small class="pharma-cell-sub">'+esc(m.strength||'Strength not recorded')+'</small></td><td>'+esc(m.dosage_form||'—')+'</td><td>'+money(m.selling_price)+'</td><td><strong>'+stock+'</strong><small class="pharma-cell-sub">Reorder at '+Number(m.reorder_level||0)+'</small></td><td>'+(m.prescription_required?'<span class="badge warning">Prescription</span>':'<span class="badge success">Non-Rx</span>')+'</td><td>'+(m.active===false?'<span class="badge danger">Inactive</span>':'<span class="badge success">Active</span>')+'</td></tr>';}).join('')+'</tbody></table>':'<div class="empty-state"><i class="fas fa-capsules"></i><h4>No medicines found</h4><p>Add your first medicine to the pharmacy catalogue.</p></div>';
+ };
+ window.pharmaRenderBatches=function(){
+  const q=String($('pharmaBatchSearch')?.value||'').toLowerCase(), f=$('pharmaBatchFilter')?.value||'all', now=today(), cutoff=new Date();cutoff.setDate(cutoff.getDate()+90);const end=cutoff.toISOString().slice(0,10);
+  const list=batches.filter(b=>{const name=b.pharmacy_products?.name||meds.find(m=>m.id===b.product_id)?.name||'';const match=[name,b.batch_number,b.supplier_name,b.purchase_reference].some(v=>String(v||'').toLowerCase().includes(q));const expired=b.expiry_date<now;return match&&(f==='all'||(f==='expired'&&expired)||(f==='expiring'&&!expired&&b.expiry_date<=end)||(f==='low'&&Number(b.quantity_available||0)===0));});
+  if($('pharmaBatchStats'))$('pharmaBatchStats').innerHTML='<div><strong>'+batches.length+'</strong><span>Total batches</span></div><div><strong>'+batches.filter(b=>b.expiry_date<now).length+'</strong><span>Expired batches</span></div><div><strong>'+batches.filter(b=>b.expiry_date>=now&&b.expiry_date<=end).length+'</strong><span>Expiring in 90 days</span></div><div><strong>'+batches.reduce((n,b)=>n+Number(b.quantity_available||0),0)+'</strong><span>Units on record</span></div>';
+  const box=$('pharmaBatchTable');if(!box)return;
+  box.innerHTML=list.length?'<table class="data-table"><thead><tr><th>Medicine</th><th>Batch / Lot</th><th>Expiry</th><th>Received</th><th>Available</th><th>Cost / unit</th><th>Supplier</th><th>Stock status</th></tr></thead><tbody>'+list.map(b=>{const expired=b.expiry_date<now,soon=!expired&&b.expiry_date<=end;return '<tr><td><strong>'+esc(b.pharmacy_products?.name||meds.find(m=>m.id===b.product_id)?.name||'Medicine')+'</strong><small class="pharma-cell-sub">'+esc(b.pharmacy_products?.strength||'')+'</small></td><td>'+esc(b.batch_number)+'</td><td><strong>'+esc(b.expiry_date)+'</strong></td><td>'+Number(b.quantity_received||0)+'</td><td>'+Number(b.quantity_available||0)+'</td><td>'+money(b.cost_price)+'</td><td>'+esc(b.supplier_name||'—')+'</td><td>'+(expired?'<span class="badge danger">Expired — quarantine</span>':soon?'<span class="badge warning">Expiring soon</span>':Number(b.quantity_available||0)===0?'<span class="badge danger">No stock</span>':'<span class="badge success">Available</span>')+'</td></tr>';}).join('')+'</tbody></table>':'<div class="empty-state"><i class="fas fa-boxes-stacked"></i><h4>No matching batches</h4><p>Receive a batch to start tracking lot numbers and expiry.</p></div>';
+ };
+ window.pharmaRenderPrescriptions=function(){
+  const q=String($('pharmaPrescriptionSearch')?.value||'').toLowerCase(),f=$('pharmaPrescriptionFilter')?.value||'all';
+  const list=prescriptions.filter(p=>[p.prescription_number,p.patient_name,p.patient_reference,p.prescriber_name,p.prescriber_registration].some(v=>String(v||'').toLowerCase().includes(q))&&(f==='all'||p.status===f));
+  const box=$('pharmaPrescriptionTable');if(!box)return;
+  box.innerHTML=list.length?'<table class="data-table"><thead><tr><th>Prescription</th><th>Patient</th><th>Prescriber</th><th>Prescribed</th><th>Valid until</th><th>Status</th><th>Pharmacist actions</th></tr></thead><tbody>'+list.map(p=>{const expired=p.valid_until&&p.valid_until<today();const badge=p.status==='validated'?'success':p.status==='dispensed'?'info':p.status==='rejected'||p.status==='cancelled'?'danger':'warning';return '<tr><td><strong>'+esc(p.prescription_number)+'</strong><small class="pharma-cell-sub">'+esc(p.patient_reference||'No patient ref')+'</small></td><td>'+esc(p.patient_name)+'</td><td>'+esc(p.prescriber_name)+'<small class="pharma-cell-sub">'+esc(p.prescriber_registration||'Registration not recorded')+'</small></td><td>'+esc(String(p.prescribed_at||'').slice(0,10))+'</td><td>'+(p.valid_until?esc(p.valid_until):'Not set')+(expired?' <span class="badge danger">Expired</span>':'')+'</td><td><span class="badge '+badge+'">'+esc(p.status)+'</span></td><td>'+(p.status==='pending'&&!expired?'<button class="btn btn-sm btn-success" onclick="pharmaSetPrescriptionStatus(\''+esc(p.id)+'\',\'validated\')">Validate</button> <button class="btn btn-sm btn-danger" onclick="pharmaSetPrescriptionStatus(\''+esc(p.id)+'\',\'rejected\')">Reject</button>':p.status==='validated'&&!expired?'<button class="btn btn-sm btn-outline" onclick="pharmaSetPrescriptionStatus(\''+esc(p.id)+'\',\'dispensed\')">Mark dispensed</button>':'—')+'</td></tr>';}).join('')+'</tbody></table>':'<div class="empty-state"><i class="fas fa-file-prescription"></i><h4>No prescriptions found</h4><p>Register a prescription before validation and dispensing.</p></div>';
+ };
+ window.pharmaSaveMedicine=async function(e){e.preventDefault();const btn=e.submitter;if(btn)btn.disabled=true;try{const c=client(),u=await actor();const payload={name:$('pharmaMedName').value.trim(),sku:$('pharmaMedSku').value.trim()||null,barcode:$('pharmaMedBarcode').value.trim()||null,category:$('pharmaMedCategory').value,active_ingredient:$('pharmaMedIngredient').value.trim()||null,strength:$('pharmaMedStrength').value.trim()||null,dosage_form:$('pharmaMedForm').value||null,selling_price:Number($('pharmaMedPrice').value),reorder_level:Number($('pharmaMedReorder').value||0),prescription_required:$('pharmaMedRx').value==='true',active:true,updated_at:new Date().toISOString()};if(!payload.name)throw new Error('Medicine name is required.');if(u)payload.created_by=u.id;const r=await c.from('pharmacy_products').insert(payload).select().single();if(r.error)throw r.error;pharmaCloseModal('pharmaMedicineModal');notify('Medicine saved to the pharmacy catalogue.');await window.pharmaLoadAll();}catch(e){console.error(e);notify('Could not save medicine: '+errMsg(e),'error');}finally{if(btn)btn.disabled=false;}};
+ window.pharmaSaveBatch=async function(e){e.preventDefault();const btn=e.submitter;if(btn)btn.disabled=true;try{const c=client(),u=await actor(),expiry=$('pharmaBatchExpiry').value,qty=Number($('pharmaBatchQty').value);if(expiry<today())throw new Error('Expired stock cannot be received as usable inventory. Follow the pharmacy quarantine/return process.');if(!Number.isInteger(qty)||qty<1)throw new Error('Quantity must be a whole number greater than zero.');const payload={product_id:$('pharmaBatchProduct').value,batch_number:$('pharmaBatchNumber').value.trim(),expiry_date:expiry,quantity_received:qty,quantity_available:qty,cost_price:Number($('pharmaBatchCost').value||0),selling_price:Number($('pharmaBatchPrice').value||0),supplier_name:$('pharmaBatchSupplier').value.trim()||null,purchase_reference:$('pharmaBatchRef').value.trim()||null};if(u)payload.created_by=u.id;const r=await c.from('pharmacy_batches').insert(payload).select().single();if(r.error)throw r.error;try{await c.from('pharmacy_stock_movements').insert({product_id:payload.product_id,batch_id:r.data.id,movement_type:'purchase',quantity_change:qty,reference_number:payload.purchase_reference,notes:'Batch received: '+payload.batch_number,performed_by:u?.id||null});}catch(movementErr){console.warn('Stock movement audit could not be saved',movementErr);}pharmaCloseModal('pharmaBatchModal');notify('Batch received. Expiry and available quantity are now tracked.');await window.pharmaLoadAll();}catch(e){console.error(e);notify('Could not receive batch: '+errMsg(e),'error');}finally{if(btn)btn.disabled=false;}};
+ window.pharmaSavePrescription=async function(e){e.preventDefault();const btn=e.submitter;if(btn)btn.disabled=true;try{const c=client(),u=await actor(),valid=$('pharmaRxValidUntil').value||null;if(valid&&valid<today())throw new Error('Valid-until date cannot be in the past.');const payload={prescription_number:$('pharmaRxNumber').value.trim(),patient_name:$('pharmaRxPatient').value.trim(),patient_reference:$('pharmaRxPatientRef').value.trim()||null,prescriber_name:$('pharmaRxPrescriber').value.trim(),prescriber_registration:$('pharmaRxRegistration').value.trim()||null,valid_until:valid,notes:$('pharmaRxNotes').value.trim()||null,status:'pending'};if(u)payload.created_by=u.id;const r=await c.from('pharmacy_prescriptions').insert(payload).select().single();if(r.error)throw r.error;pharmaCloseModal('pharmaPrescriptionModal');notify('Prescription registered as pending pharmacist validation.');await window.pharmaLoadAll();}catch(e){console.error(e);notify('Could not register prescription: '+errMsg(e),'error');}finally{if(btn)btn.disabled=false;}};
+ window.pharmaSetPrescriptionStatus=async function(id,status){if(!['validated','dispensed','rejected'].includes(status))return;const p=prescriptions.find(x=>String(x.id)===String(id));if(!p)return;if(p.valid_until&&p.valid_until<today()&&status!=='rejected')return notify('This prescription has expired. Do not validate or dispense it.','error');if(status==='validated'&&!confirm('Confirm that the prescription and prescriber details have been checked by an authorized pharmacist?'))return;if(status==='dispensed'&&!confirm('Confirm dispensing has actually been completed and recorded? This action does not deduct batch stock.'))return;try{const u=await actor(),payload={status};if(status==='validated'){payload.validated_at=new Date().toISOString();if(u)payload.validated_by=u.id;}const r=await client().from('pharmacy_prescriptions').update(payload).eq('id',id);if(r.error)throw r.error;notify('Prescription status updated.');await window.pharmaLoadAll();}catch(e){console.error(e);notify('Could not update prescription: '+errMsg(e),'error');}};
+ const oldNav=window.navigateTo;
+ if(typeof oldNav==='function')window.navigateTo=function(section){const r=oldNav(section);if(['pharmacyInventory','pharmacyBatches','pharmacyPrescriptions'].includes(section))window.pharmaLoadAll();return r;};
+ document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{if(document.body.classList.contains('authenticated'))window.pharmaLoadAll();},900);});
+})();
+</script>
 
 </body>`);
     w.document.close();
