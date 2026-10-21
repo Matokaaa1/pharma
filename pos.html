@@ -1185,10 +1185,12 @@ a{color:#0f766e}
                 <div class="card-header">
                     <h3>🛒 Point of Sale</h3>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <button class="btn btn-sm btn-primary" onclick="switchCategory('all')">All</button>
-                        <button class="btn btn-sm btn-success" onclick="switchCategory('otc')"><i class="fas fa-capsules"></i> OTC Medicines</button>
-                        <button class="btn btn-sm btn-warning" onclick="switchCategory('prescription')"><i class="fas fa-prescription"></i> Prescription</button>
-                        <button class="btn btn-sm btn-info" onclick="switchCategory('first-aid')"><i class="fas fa-kit-medical"></i> First Aid</button>
+                        <button class="btn btn-sm btn-primary" onclick="switchCategory('all')"><i class="fas fa-border-all"></i> All Products</button>
+                        <button class="btn btn-sm btn-success" onclick="switchCategory('all-medicines')"><i class="fas fa-capsules"></i> All Medicines</button>
+                        <button class="btn btn-sm btn-warning" onclick="switchCategory('prescription')"><i class="fas fa-prescription"></i> Prescription Medicines</button>
+                        <button class="btn btn-sm btn-info" onclick="switchCategory('otc')"><i class="fas fa-pills"></i> OTC Medicines</button>
+                        <button class="btn btn-sm btn-info" onclick="switchCategory('all-non-pharma')"><i class="fas fa-kit-medical"></i> Non-pharmaceuticals</button>
+                        <button class="btn btn-sm btn-soft" onclick="switchCategory('first-aid')"><i class="fas fa-kit-medical"></i> First Aid</button>
                         <button class="btn btn-sm btn-danger" onclick="switchCategory('supplies')"><i class="fas fa-briefcase-medical"></i> Medical Supplies</button>
                         <button class="btn btn-sm btn-soft" onclick="switchCategory('devices')"><i class="fas fa-stethoscope"></i> Devices</button>
                         <button class="btn btn-sm btn-soft" onclick="switchCategory('consumables')"><i class="fas fa-boxes-stacked"></i> Consumables</button>
@@ -1667,6 +1669,8 @@ a{color:#0f766e}
                             <option value="">Select</option>
                             <option value="otc">OTC Medicine</option>
                             <option value="prescription">Prescription Medicine</option>
+                            <option value="antibiotics">Antibiotics (apply prescription controls as required)</option>
+                            <option value="analgesics">Analgesics / Pain Relief</option>
                             <option value="first-aid">First Aid</option>
                             <option value="supplies">Medical Supplies</option>
                             <option value="devices">Medical Devices & Equipment</option>
@@ -3387,8 +3391,17 @@ function renderPOSProducts() {
         const strength = String(p.colour || p.strength || '').toLowerCase();
         const ingredient = String(p.fit || p.active_ingredient || '').toLowerCase();
         const matchSearch = name.includes(searchValue) || code.includes(searchValue) || barcode.includes(searchValue) || strength.includes(searchValue) || ingredient.includes(searchValue);
-        const nonPharmaCategories = ['first-aid','supplies','devices','consumables','wound-care','diagnostics','personal-care','baby-maternity','oral-care','home-care','veterinary','other-non-pharma','supplements'];
-        const matchCategory = currentCategory === 'all' || (currentCategory === 'all-non-pharma' ? nonPharmaCategories.includes(String(p.category || '').toLowerCase()) : p.category === currentCategory);
+        const category = String(p.category || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+        const medicineCategories = ['otc','prescription','prescription-medicine','prescription-medicines','otc-medicine','otc-medicines','medicine','medicines','antibiotic','antibiotics','analgesic','analgesics'];
+        const nonPharmaCategories = ['first-aid','supplies','medical-supplies','devices','medical-devices','medical-devices-equipment','consumables','medical-consumables','wound-care','wound-care-dressings','diagnostics','diagnostics-test-kits','personal-care','personal-care-hygiene','baby-maternity','baby-maternity-care','oral-care','home-care','home-healthcare','veterinary','veterinary-products','other-non-pharma','other-non-pharmaceuticals','supplements','vitamins-supplements'];
+        const isMedicine = medicineCategories.includes(category) || category.includes('medicine') || category === 'antibiotic' || category === 'analgesic';
+        const isNonPharma = nonPharmaCategories.includes(category) || (!isMedicine && category !== '');
+        const matchCategory = currentCategory === 'all'
+            || (currentCategory === 'all-medicines' && isMedicine)
+            || (currentCategory === 'all-non-pharma' && isNonPharma)
+            || (currentCategory === 'prescription' && ['prescription','prescription-medicine','prescription-medicines'].includes(category))
+            || (currentCategory === 'otc' && ['otc','otc-medicine','otc-medicines'].includes(category))
+            || category === currentCategory;
         // Show EVERY product in the POS catalogue, including zero-stock items.
         // Out-of-stock items remain visible but cannot be added to the cart.
         return matchSearch && matchCategory;
