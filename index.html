@@ -980,7 +980,7 @@ a{color:#0f766e}
         <div class="login-tabs"><button class="login-tab active" id="emailTab" type="button" onclick="showLoginPane('emailPane')">Email Login</button><button class="login-tab" id="pinTab" type="button" onclick="showLoginPane('pinPane')">PIN Login</button></div>
         <div id="loginAlert" class="login-alert"></div>
         <div id="pinPane" class="hidden"><div class="form-group"><label>Staff Email / Username</label><input id="pinEmail" type="text" placeholder="admin or staff email"></div><div class="pin-dots" id="pinDots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div><input id="pinInput" type="password" inputmode="numeric" maxlength="6" class="hidden"><div class="pin-keypad"><button type="button" onclick="pinKey('1')">1</button><button type="button" onclick="pinKey('2')">2</button><button type="button" onclick="pinKey('3')">3</button><button type="button" onclick="pinKey('4')">4</button><button type="button" onclick="pinKey('5')">5</button><button type="button" onclick="pinKey('6')">6</button><button type="button" onclick="pinKey('7')">7</button><button type="button" onclick="pinKey('8')">8</button><button type="button" onclick="pinKey('9')">9</button><button type="button" onclick="pinClear()">⌫</button><button type="button" onclick="pinKey('0')">0</button><button type="button" id="pinEnter" onclick="handleLogin(event)">✓</button></div></div>
-        <div id="emailPane"><form id="loginForm" onsubmit="handleLogin(event)"><div class="form-group"><label>Email</label><input id="emailInput" type="email" required placeholder="name@company.com"></div><div class="form-group"><label>Password</label><input id="passwordInput" type="password" required placeholder="Password"></div><button class="btn btn-primary btn-block" id="loginBtn" type="submit"><span id="btnText">Sign In</span><i id="btnSpinner" class="fas fa-spinner fa-spin hidden"></i></button></form></div>
+        <div id="emailPane"><form id="loginForm" onsubmit="handleLogin(event)"><div class="form-group"><label>Email</label><input id="emailInput" type="email" required placeholder="name@company.com"></div><div class="form-group"><label>Password</label><input id="passwordInput" type="password" required placeholder="Password"></div><button class="btn btn-primary btn-block" id="loginBtn" type="submit"><span id="btnText">Sign In</span><i id="btnSpinner" class="fas fa-spinner fa-spin hidden"></i></button></form><button type="button" id="forgotPasswordBtn" class="btn btn-link btn-block" style="margin-top:10px;color:#0F766E" onclick="sendPasswordReset()">Forgot password? Send reset email</button></div>
         <p style="text-align:center;color:#999;font-size:11px;margin-top:18px">Authorized staff only • Session protected</p>
       </div>
     </div>
@@ -1937,7 +1937,7 @@ let isInitialized = false;
 // ============================================================
 let pinValue = '';
 let isSubmitting = false;
-let currentMethod = 'pin';
+let currentMethod = 'email';
 let sessionTimer = null;
 let sessionTimeout = 30;
 const SESSION_KEY = 'pharmapharmacy_session';
@@ -2247,6 +2247,30 @@ async function logout() {
 }
 window.logout = logout;
 
+async function sendPasswordReset() {
+    const emailInput = document.getElementById('emailInput');
+    const email = (emailInput?.value || '').trim();
+    if (!email || !email.includes('@')) {
+        showAlert('Enter your account email first, then choose Forgot password.', 'error');
+        emailInput?.focus();
+        return;
+    }
+    const button = document.getElementById('forgotPasswordBtn');
+    if (button) { button.disabled = true; button.textContent = 'Sending reset email…'; }
+    try {
+        const redirectTo = window.location.origin + window.location.pathname;
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) throw error;
+        showAlert('If this email belongs to an account, Supabase will send a password-reset link. Check your inbox and spam folder.', 'success');
+    } catch (error) {
+        console.error('[Pharma Pharmacy] Password reset request failed:', error);
+        showAlert(error.message || 'Could not send the reset email. Check Supabase Auth email settings and redirect URL allowlist.', 'error');
+    } finally {
+        if (button) { button.disabled = false; button.textContent = 'Forgot password? Send reset email'; }
+    }
+}
+window.sendPasswordReset = sendPasswordReset;
+
 // ============================================================
 // LOGIN SCREEN FUNCTIONS
 // ============================================================
@@ -2296,52 +2320,52 @@ function showDashboard() {
 
 async function checkAuth() {
     try {
-        // Cashier terminal uses its own session and never reuses the Admin POS session.
-        const stored = localStorage.getItem(SESSION_KEY);
-        if (!stored) {
-            console.log('❌ No session found');
-            showLogin();
-            return null;
-        }
-
-        let sessionData;
-        try {
-            sessionData = JSON.parse(stored);
-        } catch (e) {
+        // Never trust a localStorage-only session. Require a valid Supabase Auth session.
+        const { data: authState, error: authError } = await sb.auth.getSession();
+        if (authError || !authState?.session?.user?.id) {
             localStorage.removeItem(SESSION_KEY);
             showLogin();
             return null;
         }
-
-        const { user, loginTime } = sessionData;
-
-        if (!user) {
+        const authUser = authState.session.user;
+        const { data: user, error: profileError } = await sb
+            .from('users')
+            .select('id,email,full_name,role_id,role,role_name,status,pin_enabled')
+            .eq('id', authUser.id)
+            .maybeSingle();
+        if (profileError || !user || user.status !== 'active') {
+            await sb.auth.signOut().catch(() => {});
             localStorage.removeItem(SESSION_KEY);
             showLogin();
             return null;
         }
-
         const maxAge = 24 * 60 * 60 * 1000;
-        if (loginTime && Date.now() - loginTime > maxAge) {
+        const prior = (() => { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || '{}'); } catch (_) { return {}; } })();
+        if (prior.loginTime && Date.now() - prior.loginTime > maxAge) {
+            await sb.auth.signOut().catch(() => {});
             localStorage.removeItem(SESSION_KEY);
             showLogin();
             return null;
         }
-
-        console.log('✅ User authenticated:', user.email);
-        currentUser = user;
-        window.currentUser = user;
-        updateUI(user);
+        let resolvedRole = user.role_name || user.role || 'Cashier';
+        if (user.role_id) {
+            const { data: roleRow } = await sb.from('roles').select('name').eq('id', user.role_id).maybeSingle();
+            if (roleRow?.name) resolvedRole = roleRow.name;
+        }
+        const sessionData = { user: { ...user, role_name: resolvedRole }, session: authState.session, loginMethod: 'email', loginTime: prior.loginTime || Date.now() };
+        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+        currentUser = sessionData.user;
+        window.currentUser = currentUser;
+        updateUI(currentUser);
         resetSessionTimer();
         currentTab = 'dashboard';
         window.currentTab = 'dashboard';
         showDashboard();
         navigateTo('dashboard');
-        updateGreeting(user);
+        updateGreeting(currentUser);
         return currentUser;
-
     } catch (error) {
-        console.error('❌ Auth error:', error);
+        console.error('[Pharma Pharmacy] Session verification failed:', error);
         localStorage.removeItem(SESSION_KEY);
         showLogin();
         return null;
@@ -2595,6 +2619,7 @@ async function handleLogin(e) {
         let email = '';
 
         if (currentMethod === 'pin') {
+            throw new Error('PIN login is temporarily disabled. Please use email and password so your account is securely authenticated.');
             const pinEmail = document.getElementById('pinEmail');
             if (!pinEmail) throw new Error('Email field not found');
             email = pinEmail.value.trim();
