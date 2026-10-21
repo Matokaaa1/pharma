@@ -795,7 +795,7 @@ body:not(.authenticated) #sidebarToggle{display:none!important;}
 }
 </style>
     <!-- Pharma Pharmacy Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%236b21a8'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Georgia,serif' font-size='34' font-weight='700' fill='white'%3ELC%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230f766e'/%3E%3Crect x='26' y='10' width='12' height='44' rx='2' fill='white'/%3E%3Crect x='10' y='26' width='44' height='12' rx='2' fill='white'%3C/svg%3E">
     <meta name="theme-color" content="#6b21a8">
 <style id="lucie-final-ui-fixes">
 /* Notifications and welcome UI are overlays, never normal document content. */
@@ -2989,10 +2989,10 @@ window.addEventListener('unhandledrejection', function(e) {
     console.error('[Pharma Pharmacy] UNHANDLED PROMISE REJECTION', e.reason);
 });
 document.addEventListener('click', function(e) {
-    const tab = e.target.closest('.sidebar-menu li[data-section], [data-section]');
-    if (tab) {
-        console.log('[Pharma Pharmacy] CLICK', { section:tab.dataset.section, text:tab.textContent.trim(), element:tab });
-    }
+    const tab = e.target.closest('.sidebar-menu li[data-section]');
+    if (!tab || !tab.dataset.section) return;
+    e.preventDefault();
+    if (typeof window.navigateTo === 'function') window.navigateTo(tab.dataset.section);
 });
 
 
@@ -4435,10 +4435,19 @@ async function loadDeliveryRates(){
  let rows=[];
  try{const r=await sb.from('delivery_rates').select('town,fee,active').order('town'); if(!r.error&&r.data) rows=r.data;}catch(_){rows=[];}
  if(!rows.length) rows=DEFAULT_DELIVERY_TOWNS.map(t=>({town:t,fee:'',active:true}));
- box.innerHTML=rows.map((r,i)=>`<div class="delivery-rate-row" style="display:grid;grid-template-columns:1fr 95px 30px;gap:6px;align-items:center;"><input class="delivery-town" value="${String(r.town||'').replace(/"/g,'&quot;')}" placeholder="Town / City"><input class="delivery-fee" type="number" min="0" step="1" value="${r.fee==null?'':Number(r.fee)}" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-rate-row').remove()" title="Remove">×</button></div>`).join('');
+ box.replaceChildren();
+ rows.forEach(r=>{
+  const row=document.createElement('div');row.className='delivery-rate-row';row.style.cssText='display:grid;grid-template-columns:1fr 95px 30px;gap:6px;align-items:center;';
+  const town=document.createElement('input');town.className='delivery-town';town.value=String(r.town||'');town.placeholder='Town / City';
+  const fee=document.createElement('input');fee.className='delivery-fee';fee.type='number';fee.min='0';fee.step='1';fee.value=r.fee==null?'':String(Number(r.fee));fee.placeholder='Fee';
+  const remove=document.createElement('button');remove.type='button';remove.className='btn btn-sm btn-outline';remove.title='Remove';remove.textContent='×';remove.addEventListener('click',()=>row.remove());
+  row.append(town,fee,remove);box.appendChild(row);
+ });
  return rows;
 }
-function addDeliveryRateRow(){const box=document.getElementById('deliveryRatesAdmin');if(!box)return;const d=document.createElement('div');d.className='delivery-rate-row';d.style.cssText='display:grid;grid-template-columns:1fr 95px 30px;gap:6px;align-items:center;margin-top:8px;';d.innerHTML=`<input class="delivery-town" placeholder="Town / City"><input class="delivery-fee" type="number" min="0" step="1" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-rate-row').remove()">×</button>`;box.appendChild(d);}
+window.loadDeliveryRates=loadDeliveryRates;
+
+function addDeliveryRateRow()function addDeliveryRateRow(){const box=document.getElementById('deliveryRatesAdmin');if(!box)return;const d=document.createElement('div');d.className='delivery-rate-row';d.style.cssText='display:grid;grid-template-columns:1fr 95px 30px;gap:6px;align-items:center;margin-top:8px;';d.innerHTML=`<input class="delivery-town" placeholder="Town / City"><input class="delivery-fee" type="number" min="0" step="1" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-rate-row').remove()">×</button>`;box.appendChild(d);}
 async function saveDeliveryRates(){
  const rows=[...document.querySelectorAll('#deliveryRatesAdmin .delivery-rate-row')].map(r=>({town:r.querySelector('.delivery-town')?.value.trim(),fee:Number(r.querySelector('.delivery-fee')?.value),active:true})).filter(r=>r.town&&Number.isFinite(r.fee)&&r.fee>=0);
  if(!rows.length){showToast('Add at least one town and delivery fee.','warning');return;}
@@ -4450,10 +4459,22 @@ async function loadDeliveryZones(){
  const box=document.getElementById('deliveryZonesAdmin'); if(!box) return [];
  let rows=[]; try{const r=await sb.from('delivery_zones').select('id,name,min_km,max_km,fee,active').order('min_km'); if(!r.error&&r.data) rows=r.data;}catch(_){}
  if(!rows.length) rows=[{name:'0–5 km',min_km:0,max_km:5,fee:100,active:true},{name:'5–15 km',min_km:5,max_km:15,fee:150,active:true},{name:'15–30 km',min_km:15,max_km:30,fee:250,active:true},{name:'30–60 km',min_km:30,max_km:60,fee:350,active:true},{name:'60+ km',min_km:60,max_km:null,fee:500,active:true}];
- box.innerHTML=rows.map(r=>`<div class="delivery-zone-row" style="display:grid;grid-template-columns:1.2fr 90px 90px 95px 32px;gap:6px;align-items:center;"><input class="zone-name" value="${String(r.name||'').replace(/"/g,'&quot;')}" placeholder="Zone name"><input class="zone-min" type="number" min="0" step="0.1" value="${r.min_km??0}" placeholder="Min km"><input class="zone-max" type="number" min="0" step="0.1" value="${r.max_km==null?'':r.max_km}" placeholder="Max km"><input class="zone-fee" type="number" min="0" step="1" value="${r.fee??0}" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-zone-row').remove()">×</button></div>`).join('');
+ box.replaceChildren();
+ rows.forEach(r=>{
+  const row=document.createElement('div');row.className='delivery-zone-row';row.style.cssText='display:grid;grid-template-columns:1.2fr 90px 90px 95px 32px;gap:6px;align-items:center;';
+  const field=(cls,type,value,placeholder,step)=>{const el=document.createElement('input');el.className=cls;el.type=type;el.placeholder=placeholder;if(type==='number'){el.min='0';el.step=step||'1';}el.value=value==null?'':String(value);return el;};
+  const name=field('zone-name','text',r.name||'','Zone name');
+  const min=field('zone-min','number',r.min_km??0,'Min km','0.1');
+  const max=field('zone-max','number',r.max_km,'Max km','0.1');
+  const fee=field('zone-fee','number',r.fee??0,'Fee','1');
+  const remove=document.createElement('button');remove.type='button';remove.className='btn btn-sm btn-outline';remove.textContent='×';remove.addEventListener('click',()=>row.remove());
+  row.append(name,min,max,fee,remove);box.appendChild(row);
+ });
  return rows;
 }
-function addDeliveryZoneRow(){const box=document.getElementById('deliveryZonesAdmin');if(!box)return;const d=document.createElement('div');d.className='delivery-zone-row';d.style.cssText='display:grid;grid-template-columns:1.2fr 90px 90px 95px 32px;gap:6px;align-items:center;margin-top:8px;';d.innerHTML=`<input class="zone-name" placeholder="Zone name"><input class="zone-min" type="number" min="0" step="0.1" placeholder="Min km"><input class="zone-max" type="number" min="0" step="0.1" placeholder="Max km"><input class="zone-fee" type="number" min="0" step="1" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-zone-row').remove()">×</button>`;box.appendChild(d);}
+window.loadDeliveryZones=loadDeliveryZones;
+
+function addDeliveryZoneRow()function addDeliveryZoneRow(){const box=document.getElementById('deliveryZonesAdmin');if(!box)return;const d=document.createElement('div');d.className='delivery-zone-row';d.style.cssText='display:grid;grid-template-columns:1.2fr 90px 90px 95px 32px;gap:6px;align-items:center;margin-top:8px;';d.innerHTML=`<input class="zone-name" placeholder="Zone name"><input class="zone-min" type="number" min="0" step="0.1" placeholder="Min km"><input class="zone-max" type="number" min="0" step="0.1" placeholder="Max km"><input class="zone-fee" type="number" min="0" step="1" placeholder="Fee"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.delivery-zone-row').remove()">×</button>`;box.appendChild(d);}
 async function saveDeliveryZones(){
  const zones=[...document.querySelectorAll('#deliveryZonesAdmin .delivery-zone-row')].map(r=>({name:r.querySelector('.zone-name')?.value.trim()||'Distance Zone',min_km:Number(r.querySelector('.zone-min')?.value),max_km:r.querySelector('.zone-max')?.value===''?null:Number(r.querySelector('.zone-max')?.value),fee:Number(r.querySelector('.zone-fee')?.value),active:true})).filter(z=>Number.isFinite(z.min_km)&&z.min_km>=0&&(z.max_km===null||(Number.isFinite(z.max_km)&&z.max_km>z.min_km))&&Number.isFinite(z.fee)&&z.fee>=0);
  if(!zones.length){showToast('Add at least one valid distance zone.','warning');return;}
