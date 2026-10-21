@@ -988,6 +988,7 @@ a{color:#0f766e}
       @media(max-width:700px){ .lc-fashion-banner{grid-template-columns:1fr;} }
     </style>
 
+<style id="pharmacy-dispensing-layout">.pharma-dispense-add{display:grid;grid-template-columns:minmax(170px,1.4fr) minmax(180px,1.2fr) 100px 145px auto;gap:10px;align-items:end;background:var(--bg);border:1px solid var(--border);padding:14px;border-radius:14px;margin:14px 0}.pharma-dispense-add .form-group{margin:0;min-width:0}.pharma-checkout-bottom{display:grid;grid-template-columns:160px 150px minmax(180px,1fr) 230px;gap:12px;align-items:end;margin-top:18px}.pharma-checkout-bottom .form-group{margin:0;min-width:0}.pharma-checkout-total{display:grid;grid-template-columns:1fr auto;gap:4px 10px;border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--bg-card);font-size:12px}.pharma-checkout-total strong{text-align:right}.pharma-checkout-total strong:last-child{font-size:18px;color:var(--primary)}.pharma-checkout-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}.pharma-receipt-confirm{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px;margin-top:16px}@media(max-width:1050px){.pharma-dispense-add,.pharma-checkout-bottom{grid-template-columns:1fr 1fr}.pharma-checkout-total{grid-column:1/-1}}@media(max-width:600px){.pharma-dispense-add,.pharma-checkout-bottom{grid-template-columns:1fr}.pharma-checkout-actions .btn{width:100%;justify-content:center}}</style>
 </head>
 <body>
 
@@ -1023,6 +1024,7 @@ a{color:#0f766e}
             <li data-section="gallery"><i class="fas fa-images"></i> Photo Gallery <span class="badge" id="galleryBadge">46</span></li>
             <li data-section="pharmacyInventory"><i class="fas fa-prescription-bottle-medical"></i> Medicines Catalogue</li>
             <li data-section="pharmacyBatches"><i class="fas fa-calendar-xmark"></i> Batches & Expiry</li>
+            <li data-section="pharmacyDispensing"><i class="fas fa-prescription"></i> Medicine Dispensing</li>
             <li data-section="pharmacyPrescriptions"><i class="fas fa-file-prescription"></i> Prescription Register</li>
             <li data-section="inventory"><i class="fas fa-warehouse"></i> Inventory</li>
             <li data-section="customers"><i class="fas fa-user-friends"></i> Customers</li>
@@ -1592,6 +1594,15 @@ a{color:#0f766e}
           </div>
         </section>
 
+<section id="pharmacyDispensingSection" class="section-page">
+<div class="card">
+<div class="card-header"><div><h3><i class="fas fa-prescription"></i> Pharmacy Dispensing & Checkout</h3><p class="pharma-muted">Select medicine, an unexpired batch, and quantity. The database transaction records the dispensing and deducts stock together.</p></div><span class="badge success">Batch-controlled</span></div>
+<div class="form-row"><div class="form-group"><label>Patient / customer name *</label><input id="pharmaSalePatient" required placeholder="Patient or customer name"></div><div class="form-group"><label>Validated prescription (for Rx medicines)</label><select id="pharmaSalePrescription" onchange="pharmaOnPrescriptionSelect()"><option value="">No prescription / OTC sale</option></select></div></div>
+<div class="pharma-dispense-add"><div class="form-group"><label>Medicine</label><select id="pharmaSaleProduct" onchange="pharmaUpdateDispenseBatches()"></select></div><div class="form-group"><label>Unexpired batch</label><select id="pharmaSaleBatch" onchange="pharmaSetDispensePrice()"></select></div><div class="form-group"><label>Quantity</label><input id="pharmaSaleQty" type="number" min="1" step="1" value="1"></div><div class="form-group"><label>Unit price (KES)</label><input id="pharmaSalePrice" type="number" min="0" step="0.01" value="0"></div><button class="btn btn-primary" type="button" onclick="pharmaAddDispenseItem()">Add to basket</button></div>
+<div id="pharmaDispenseCart" class="table-wrapper"></div>
+<div class="pharma-checkout-bottom"><div class="form-group"><label>Payment method</label><select id="pharmaSalePayment"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="card">Card</option><option value="insurance">Insurance</option><option value="credit">Credit</option></select></div><div class="form-group"><label>Discount (KES)</label><input id="pharmaSaleDiscount" type="number" min="0" step="0.01" value="0" oninput="pharmaRenderDispenseCart()"></div><div class="form-group"><label>Notes</label><input id="pharmaSaleNotes" placeholder="Optional reference"></div><div class="pharma-checkout-total"><span>Subtotal</span><strong id="pharmaSaleSubtotal">KES 0.00</strong><span>Discount</span><strong id="pharmaSaleDiscountDisplay">KES 0.00</strong><span>Total due</span><strong id="pharmaSaleTotal">KES 0.00</strong></div></div>
+<div class="pharma-checkout-actions"><button class="btn btn-outline" type="button" onclick="pharmaClearDispenseCart()">Clear basket</button><button class="btn btn-success" type="button" onclick="pharmaCompleteDispensing()">Complete Dispensing</button></div><div id="pharmaDispenseReceipt"></div>
+</div></section>
         <!-- Pharmacy-specific forms -->
         <div class="modal-overlay" id="pharmaMedicineModal"><div class="modal modal-lg">
           <div class="modal-header"><h3><i class="fas fa-capsules"></i> Add Medicine</h3><button class="close" onclick="pharmaCloseModal('pharmaMedicineModal')">&times;</button></div>
@@ -2890,6 +2901,7 @@ function navigateTo(section) {
         'gallery': 'gallerySection',
         'pharmacyInventory': 'pharmacyInventorySection',
         'pharmacyBatches': 'pharmacyBatchesSection',
+        'pharmacyDispensing': 'pharmacyDispensingSection',
         'pharmacyPrescriptions': 'pharmacyPrescriptionsSection',
         'inventory': 'inventorySection',
         'customers': 'customersSection',
@@ -2926,6 +2938,7 @@ function navigateTo(section) {
         'gallery': '🖼️ Photo Gallery',
         'pharmacyInventory': '💊 Medicines Catalogue',
         'pharmacyBatches': '📅 Batches & Expiry',
+        'pharmacyDispensing': '💳 Medicine Dispensing',
         'pharmacyPrescriptions': '🧾 Prescription Register',
         'inventory': '🏪 Inventory',
         'customers': '👤 Customers',
