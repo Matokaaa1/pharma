@@ -981,6 +981,7 @@ a{color:#0f766e}
         <div id="loginAlert" class="login-alert"></div>
         <div id="pinPane" class="hidden"><div class="form-group"><label>Staff Email / Username</label><input id="pinEmail" type="text" placeholder="admin or staff email"></div><div class="pin-dots" id="pinDots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div><input id="pinInput" type="password" inputmode="numeric" maxlength="6" class="hidden"><div class="pin-keypad"><button type="button" onclick="pinKey('1')">1</button><button type="button" onclick="pinKey('2')">2</button><button type="button" onclick="pinKey('3')">3</button><button type="button" onclick="pinKey('4')">4</button><button type="button" onclick="pinKey('5')">5</button><button type="button" onclick="pinKey('6')">6</button><button type="button" onclick="pinKey('7')">7</button><button type="button" onclick="pinKey('8')">8</button><button type="button" onclick="pinKey('9')">9</button><button type="button" onclick="pinClear()">⌫</button><button type="button" onclick="pinKey('0')">0</button><button type="button" id="pinEnter" onclick="handleLogin(event)">✓</button></div></div>
         <div id="emailPane"><form id="loginForm" onsubmit="handleLogin(event)"><div class="form-group"><label>Email</label><input id="emailInput" type="email" required placeholder="name@company.com"></div><div class="form-group"><label>Password</label><input id="passwordInput" type="password" required placeholder="Password"></div><button class="btn btn-primary btn-block" id="loginBtn" type="submit"><span id="btnText">Sign In</span><i id="btnSpinner" class="fas fa-spinner fa-spin hidden"></i></button></form><button type="button" id="forgotPasswordBtn" class="btn btn-link btn-block" style="margin-top:10px;color:#0F766E" onclick="sendPasswordReset()">Forgot password? Send reset email</button></div>
+        <div id="passwordRecoveryPanel" class="hidden" style="margin-top:16px"><h3 style="margin-bottom:12px">Set a new password</h3><form onsubmit="updateRecoveredPassword(event)"><div class="form-group"><label>New password</label><input id="recoveryPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="At least 8 characters"></div><div class="form-group"><label>Confirm new password</label><input id="recoveryPasswordConfirm" type="password" minlength="8" autocomplete="new-password" required placeholder="Re-enter new password"></div><button class="btn btn-primary btn-block" id="recoverySubmit" type="submit">Update password</button></form></div>
         <p style="text-align:center;color:#999;font-size:11px;margin-top:18px">Authorized staff only • Session protected</p>
       </div>
     </div>
@@ -2247,6 +2248,50 @@ async function logout() {
 }
 window.logout = logout;
 
+let passwordRecoveryMode = false;
+function showPasswordRecovery() {
+    passwordRecoveryMode = true;
+    const loginScreen = document.getElementById('loginScreen');
+    const dashboardScreen = document.getElementById('dashboardScreen');
+    if (loginScreen) loginScreen.style.display = 'flex';
+    if (dashboardScreen) dashboardScreen.style.display = 'none';
+    document.getElementById('emailPane')?.classList.add('hidden');
+    document.getElementById('pinPane')?.classList.add('hidden');
+    const panel = document.getElementById('passwordRecoveryPanel');
+    if (panel) panel.classList.remove('hidden');
+    showAlert('Choose a new password for your account.', 'success');
+}
+window.updateRecoveredPassword = async function(event) {
+    event.preventDefault();
+    const password = document.getElementById('recoveryPassword')?.value || '';
+    const confirmation = document.getElementById('recoveryPasswordConfirm')?.value || '';
+    if (password.length < 8) { showAlert('Use a password with at least 8 characters.', 'error'); return; }
+    if (password !== confirmation) { showAlert('The passwords do not match.', 'error'); return; }
+    const button = document.getElementById('recoverySubmit');
+    if (button) { button.disabled = true; button.textContent = 'Updating…'; }
+    try {
+        const { error } = await sb.auth.updateUser({ password });
+        if (error) throw error;
+        passwordRecoveryMode = false;
+        await sb.auth.signOut().catch(() => {});
+        localStorage.removeItem(SESSION_KEY);
+        document.getElementById('passwordRecoveryPanel')?.classList.add('hidden');
+        document.getElementById('emailPane')?.classList.remove('hidden');
+        showLogin();
+        showAlert('Password updated. Sign in with your new password.', 'success');
+    } catch (error) {
+        console.error('[Pharma Pharmacy] Password update failed:', error);
+        showAlert(error.message || 'Could not update password. Open the latest reset email and try again.', 'error');
+    } finally {
+        if (button) { button.disabled = false; button.textContent = 'Update password'; }
+    }
+};
+sb.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        setTimeout(showPasswordRecovery, 0);
+    }
+});
+
 async function sendPasswordReset() {
     const emailInput = document.getElementById('emailInput');
     const email = (emailInput?.value || '').trim();
@@ -2320,6 +2365,7 @@ function showDashboard() {
 
 async function checkAuth() {
     try {
+        if (passwordRecoveryMode) { showPasswordRecovery(); return null; }
         // Never trust a localStorage-only session. Require a valid Supabase Auth session.
         const { data: authState, error: authError } = await sb.auth.getSession();
         if (authError || !authState?.session?.user?.id) {
