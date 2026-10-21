@@ -3869,10 +3869,13 @@ window.renderPhotoGallery=renderPhotoGallery;
 function openGalleryImage(url,name){
     const w=window.open('','_blank','width=900,height=900');
     if(!w)return;
-    w.document.write(`<!doctype html><title>${String(name||'Product').replace(/</g,'&lt;')}</title><body style="margin:0;background:#faf7ff;display:grid;place-items:center;min-height:100vh"><img src="${String(url).replace(/"/g,'&quot;')}" alt="" style="max-width:94vw;max-height:94vh;object-fit:contain;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${String(name||'Product').replace(/</g,'&lt;')}</title></head><body style="margin:0;background:#faf7ff;display:grid;place-items:center;min-height:100vh"><img src="${String(url).replace(/"/g,'&quot;')}" alt="" style="max-width:94vw;max-height:94vh;object-fit:contain;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.15)"></body></html>`);
+}
 
 
 
+
+</script>
 
 <style id="pharmacy-true-clinical-theme">
 :root{--primary:#0f766e!important;--primary-light:#14b8a6!important;--primary-dark:#115e59!important;--primary-gradient:linear-gradient(135deg,#0f766e,#0891b2)!important;--secondary:#102a43!important;--gold:#14b8a6!important;--gold-light:#99f6e4!important;--gold-gradient:linear-gradient(135deg,#0f766e,#14b8a6)!important;--bg:#f3f8fa!important;--bg-card:#fff!important;--text-primary:#102a43!important;--text-secondary:#486581!important;--text-muted:#627d98!important;--border:#d9e5ec!important;--ultra-burg:#0f766e!important;--ultra-burg2:#0891b2!important;--ultra-gold:#14b8a6!important}
