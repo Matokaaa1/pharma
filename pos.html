@@ -1205,7 +1205,7 @@ a{color:#0f766e}
                             <div class="pos-toolbar ultra-pos-toolbar">
                                 <div class="search-box ultra-search">
                                     <i class="fas fa-search"></i>
-                                    <input type="text" id="posSearch" placeholder="Search product, SKU or barcode..." oninput="filterPOSProducts()" autocomplete="off">
+                                    <input type="text" id="posSearch" placeholder="Search medicine or product name, SKU, barcode or strength..." oninput="filterPOSProducts()" autocomplete="off">
                                     <kbd>Ctrl K</kbd>
                                 </div>
                                 <div class="pos-quick-actions">
@@ -1682,8 +1682,8 @@ a{color:#0f766e}
                             <option value="other-non-pharma">Other Non-pharmaceuticals</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Dosage Form</label>
-                        <select id="productGender"><option value="tablet">Tablet</option><option value="capsule">Capsule</option><option value="syrup">Syrup / Suspension</option><option value="injection">Injection</option><option value="cream">Cream / Ointment</option><option value="drops">Drops</option><option value="inhaler">Inhaler</option><option value="device">Medical Device</option><option value="other">Other</option></select>
+                    <div class="form-group"><label>Dosage Form / Product Form</label>
+                        <select id="productGender"><option value="other">Select / Not applicable</option><option value="tablet">Tablet</option><option value="capsule">Capsule</option><option value="syrup">Syrup / Suspension</option><option value="injection">Injection</option><option value="cream">Cream / Ointment</option><option value="drops">Drops</option><option value="inhaler">Inhaler</option><option value="powder">Powder / Sachet</option><option value="device">Medical Device</option><option value="consumable">Consumable</option><option value="test-kit">Test Kit</option><option value="hygiene">Hygiene / Personal Care</option><option value="other">Other</option></select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1726,7 +1726,7 @@ a{color:#0f766e}
                 <div class="form-group"><label>Product Tags</label><input type="text" id="productTags" placeholder="brand, storage, cold-chain, non-pharmaceutical"></div>
                 <div class="form-group">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                        <input type="checkbox" id="productBestQuality"> Best Quality
+                        <input type="checkbox" id="productBestQuality"> Featured Product
                     </label>
                 </div>
 
@@ -3383,7 +3383,10 @@ function renderPOSProducts() {
     let filtered = products.filter(p => {
         const name = String(p.name || '').toLowerCase();
         const code = String(p.code || '').toLowerCase();
-        const matchSearch = name.includes(searchValue) || code.includes(searchValue);
+        const barcode = String(p.barcode || '').toLowerCase();
+        const strength = String(p.colour || p.strength || '').toLowerCase();
+        const ingredient = String(p.fit || p.active_ingredient || '').toLowerCase();
+        const matchSearch = name.includes(searchValue) || code.includes(searchValue) || barcode.includes(searchValue) || strength.includes(searchValue) || ingredient.includes(searchValue);
         const nonPharmaCategories = ['first-aid','supplies','devices','consumables','wound-care','diagnostics','personal-care','baby-maternity','oral-care','home-care','veterinary','other-non-pharma','supplements'];
         const matchCategory = currentCategory === 'all' || (currentCategory === 'all-non-pharma' ? nonPharmaCategories.includes(String(p.category || '').toLowerCase()) : p.category === currentCategory);
         // Show EVERY product in the POS catalogue, including zero-stock items.
@@ -6900,7 +6903,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const id=document.getElementById('socialManagerProduct')?.value; const p=(Array.isArray(window.products)?window.products:[]).find(x=>String(x.id)===String(id));
     if(!p){const st=document.getElementById('socialManagerStatus');if(st)st.textContent='Select a product first.';return;}
     const price=Number(p.sale_price||p.price||0); const cat=p.category?` · ${p.category}`:'';
-    const caption=`✨ NEW ARRIVAL ✨\n\n${p.name||'New arrival'}${cat}\n${price?'KSh '+price.toLocaleString('en-KE'):''}\n\nAvailable now at Pharma Pharmacy. Shop online today.\n\n#pharmapharmacy #Fashion #NewArrival`;
+    const caption=`✨ NEW ARRIVAL ✨\n\n${p.name||'New arrival'}${cat}\n${price?'KSh '+price.toLocaleString('en-KE'):''}\n\nAvailable now at Pharma Pharmacy. Shop online today.\n\n#pharmapharmacy #Pharmacy #Healthcare`;
     const el=document.getElementById('socialManagerCaption');if(el)el.value=caption;
     const img=document.getElementById('socialManagerImage');if(img&&p.image_url)img.value=p.image_url;
   };
