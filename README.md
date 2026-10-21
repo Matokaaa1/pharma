@@ -5,20 +5,32 @@
 **Repository:** https://github.com/Matokaaa1/pharma  
 **Supabase project:** `ghizmgybhpmmyfrlqohq`
 
-## Included
+## Current setup
 
-- `index.html` — rebranded POS interface with pharmacy-oriented navigation, teal/blue styling and target Supabase URL configured.
-- `pharmacy_pos_schema.sql` — additional pharmacy tables for medicine products, batches/expiry dates, prescriptions, dispensing records and stock movements.
-- `.env.example` — public configuration template.
-- `.gitignore` — ignores local environment files.
+- `index.html` — pharmacy-branded POS UI, Supabase connection, email/password sign-in, Supabase-session validation, and password-reset request.
+- `pharmacy_pos_schema.sql` — pharmacy products, batches/expiry, prescriptions, dispensing, stock movements, role/profile setup, and active-staff RLS policies.
+- `README.md` — setup and operational status.
 
-## Before running
+## Login
 
-1. In `index.html`, replace `REPLACE_WITH_PHARMA_SUPABASE_PUBLISHABLE_OR_ANON_KEY` with the target project's publishable key (or legacy anon key) from Supabase Project Settings → API Keys. Never expose a service-role/secret key in browser code.
-2. Review `pharmacy_pos_schema.sql` and run it in the target project's SQL Editor: https://supabase.com/dashboard/project/ghizmgybhpmmyfrlqohq/sql/new
-3. Sign in and add verified medicine catalogue items, prices, batch numbers, expiry dates and opening stock. The app no longer seeds fictional fashion products or made-up medicines by default.
-4. Test product creation, checkout, stock changes, receipts, reports and user permissions against the target database before live use.
+1. Open the deployed site and use **Email Login**.
+2. The existing Supabase Auth account is `admin@pharma.co.ke`. A profile exists for this account with the Administrator role.
+3. The password is not displayed or stored in this repository. If you do not know it, enter `admin@pharma.co.ke` and choose **Forgot password? Send reset email**.
+4. If the reset email does not arrive, check Supabase **Authentication → URL Configuration** and email-provider settings. Ensure the deployed site URL is in the redirect allowlist.
+5. PIN login is disabled in the browser until it can be implemented with secure server-side verification. Do not use a hard-coded PIN.
 
-## Important status
+Never put a Supabase service-role/secret key in browser code. The public anon/publishable key is designed for client use only when RLS policies are configured correctly.
 
-The GitHub source has been rebranded, but this upload is not a claim that the POS is production-ready. The original retail codebase still requires a complete pharmacy workflow integration and testing. The pharmacy schema has **not** been applied to Supabase by this upload. Existing data has not been migrated. Existing product image URLs may still reference the old public storage bucket. Dispensing needs server-side transactional stock deduction (including batch/expiry handling), and RLS policies must be narrowed to staff roles and store/branch access before production.
+## Database status
+
+The Supabase project is active. The following were applied through additive migrations:
+- Pharmacy-specific tables and active-staff row-level security.
+- `public.users` and `public.roles`, with a profile linked to the existing confirmed `admin@pharma.co.ke` Auth account.
+- Compatibility tables used by the current POS UI: `products`, `orders`, `customers`, `audit_logs`, `store_settings`, `delivery_rates`, `delivery_zones`, `product_images`, and `site_settings`.
+- Session restoration now checks the live Supabase Auth session and active user profile instead of trusting localStorage alone.
+
+These changes did not drop tables or truncate business data. Pharmacy product, batch, prescription, dispensing, and stock-movement tables are currently empty; add real, verified catalogue and inventory data before use.
+
+## Production readiness
+
+This is **not yet certified production-ready**. The inherited retail interface still has workflows that need end-to-end testing and full pharmacy-specific integration. In particular, dispensing must use a server-side database transaction that validates prescriptions where required and deducts stock by earliest-expiry-first (FEFO), with no overselling. Review RLS role boundaries, storage bucket permissions, receipt/payment reconciliation, and backups before live pharmacy operations. Do not treat a successful login as proof that every POS workflow is complete.
